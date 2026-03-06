@@ -1,7 +1,7 @@
-package com.example.emotion_diary.controller;
+package com.example.emotion_diary_server.controller;
 
-import com.example.emotion_diary.model.Note;
-import com.example.emotion_diary.service.NoteService;
+import com.example.emotion_diary_server.model.Note;
+import com.example.emotion_diary_server.service.NoteService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

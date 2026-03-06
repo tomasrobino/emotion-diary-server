@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>emotion-diary</artifactId>
+	<artifactId>emotion-diary-server</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>emotion-diary</name>
-	<description>Emotion Diary</description>
+	<name>emotion-diary-server</name>
+	<description>Emotion Diary Server</description>
 	<url/>
 	<licenses>
 		<license/>

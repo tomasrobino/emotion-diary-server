@@ -1,4 +1,4 @@
-package com.example.emotion_diary.model;
+package com.example.emotion_diary_server.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

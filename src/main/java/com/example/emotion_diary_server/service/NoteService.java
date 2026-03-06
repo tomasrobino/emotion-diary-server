@@ -1,7 +1,7 @@
-package com.example.emotion_diary.service;
+package com.example.emotion_diary_server.service;
 
-import com.example.emotion_diary.model.Note;
-import com.example.emotion_diary.repository.NoteRepository;
+import com.example.emotion_diary_server.model.Note;
+import com.example.emotion_diary_server.repository.NoteRepository;
 import org.springframework.stereotype.Service;
 
 @Service

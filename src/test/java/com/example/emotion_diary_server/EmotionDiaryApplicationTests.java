@@ -1,4 +1,4 @@
-package com.example.emotion_diary;
+package com.example.emotion_diary_server;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
