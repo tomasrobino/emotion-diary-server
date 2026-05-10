@@ -11,13 +11,13 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 @Entity
-public class Note {
+public class Moodboard {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
     private String content;
 
-    public Note(String content) {
+    public Moodboard(String content) {
         this.content = content;
     }
 
