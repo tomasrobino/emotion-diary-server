@@ -17,12 +17,12 @@ public class MoodboardController {
     }
 
     @GetMapping
-    public List<Moodboard> getAllNotes() {
+    public List<Moodboard> getAllMoodboards() {
         return (List<Moodboard>) moodboardService.findAll();
     }
 
     @PostMapping
-    public Moodboard createNote(@RequestBody Moodboard moodboard) {
+    public Moodboard createMoodboard(@RequestBody Moodboard moodboard) {
         moodboardService.save(moodboard);
         return moodboard;
     }
