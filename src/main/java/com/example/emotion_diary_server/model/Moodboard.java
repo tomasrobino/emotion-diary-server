@@ -23,6 +23,12 @@ public class Moodboard {
         this.content = content;
     }
 
+    public Moodboard(Long id, String ownerUsername, String content) {
+        this.ownerUsername = ownerUsername;
+        this.content = content;
+        this.id = id;
+    }
+
     @Override
     public String toString() {
         return content;

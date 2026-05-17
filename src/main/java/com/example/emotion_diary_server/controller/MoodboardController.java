@@ -38,6 +38,57 @@ public class MoodboardController {
     }
 
     /**
+     * POST /{user}/moodboards
+     * Only the owner can create their own moodboards.
+     */
+    @PostMapping("/{user}/moodboards")
+    @PreAuthorize("#user == authentication.name")
+    public ResponseEntity<Moodboard> createMoodboard(
+            @PathVariable String user,
+            @RequestBody String content
+    ) {
+        Moodboard moodboard = moodboardService.save(new Moodboard(user, content));
+        return ResponseEntity.ok(moodboard);
+    }
+
+    /**
+     * PUT /{user}/moodboards/{moodboardId}
+     * Only the owner can update their own moodboards.
+     */
+    @PutMapping("/{user}/moodboards/{moodboardId}")
+    @PreAuthorize("#user == authentication.name")
+    public ResponseEntity<Moodboard> updateMoodboard(
+            @PathVariable String user,
+            @PathVariable Long moodboardId,
+            @RequestBody String content
+    ) {
+        Moodboard existing = moodboardService.findById(moodboardId);
+        if (existing == null || !existing.getOwnerUsername().equals(user)) {
+            return ResponseEntity.notFound().build();
+        }
+        Moodboard moodboard = moodboardService.update(new Moodboard(moodboardId, user, content));
+        return ResponseEntity.ok(moodboard);
+    }
+
+    /**
+     * DELETE /{user}/moodboards/{moodboardId}
+     * Only the owner can delete their own moodboards.
+     */
+    @DeleteMapping("/{user}/moodboards/{moodboardId}")
+    @PreAuthorize("#user == authentication.name")
+    public ResponseEntity<Void> deleteMoodboard(
+            @PathVariable String user,
+            @PathVariable Long moodboardId
+    ) {
+        Moodboard existing = moodboardService.findById(moodboardId);
+        if (existing == null || !existing.getOwnerUsername().equals(user)) {
+            return ResponseEntity.notFound().build();
+        }
+        moodboardService.deleteById(moodboardId);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
      * POST /{user}/moodboards/permissions?grantTo={otherUser}
      * Only the owner can grant access to their own moodboards.
      */

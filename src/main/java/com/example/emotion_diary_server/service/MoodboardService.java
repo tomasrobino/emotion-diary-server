@@ -15,8 +15,8 @@ public class MoodboardService {
         this.moodboardRepository = moodboardRepository;
     }
 
-    public void save(Moodboard moodboard) {
-        moodboardRepository.save(moodboard);
+    public Moodboard save(Moodboard moodboard) {
+        return moodboardRepository.save(moodboard);
     }
 
     public @Nullable Moodboard findById(Long id) {
@@ -39,7 +39,7 @@ public class MoodboardService {
         return moodboardRepository.findByOwnerUsername(ownerUsername);
     }
 
-    public void update(Moodboard moodboard) {
-        moodboardRepository.save(moodboard);
+    public Moodboard update(Moodboard moodboard) {
+        return moodboardRepository.save(moodboard);
     }
 }
