@@ -5,13 +5,13 @@ import lombok.Getter;
 
 /**
  * Represents an explicit permission grant:
- * "ownerUsername allows permittedUsername to access their moodboards."
+ * "permittedUsername is allowed to access moodboard with moodboardId."
  */
 @Getter
 @Entity
 @Table(
         name = "moodboard_permissions",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"owner_username", "permitted_username"})
+        uniqueConstraints = @UniqueConstraint(columnNames = {"moodboard_id", "permitted_username"})
 )
 public class MoodboardPermission {
 
@@ -19,16 +19,16 @@ public class MoodboardPermission {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "owner_username", nullable = false)
-    private String ownerUsername;
+    @Column(name = "moodboard_id", nullable = false)
+    private Long moodboardId;
 
     @Column(name = "permitted_username", nullable = false)
     private String permittedUsername;
 
     public MoodboardPermission() {}
 
-    public MoodboardPermission(String ownerUsername, String permittedUsername) {
-        this.ownerUsername = ownerUsername;
+    public MoodboardPermission(Long moodboardId, String permittedUsername) {
+        this.moodboardId = moodboardId;
         this.permittedUsername = permittedUsername;
     }
 

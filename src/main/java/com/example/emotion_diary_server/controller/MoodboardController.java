@@ -1,11 +1,13 @@
 package com.example.emotion_diary_server.controller;
 
 import com.example.emotion_diary_server.model.Moodboard;
+import com.example.emotion_diary_server.security.MoodboardAccessService;
 import com.example.emotion_diary_server.security.MoodboardPermission;
 import com.example.emotion_diary_server.security.MoodboardPermissionRepository;
 import com.example.emotion_diary_server.service.MoodboardService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,23 +17,29 @@ public class MoodboardController {
 
     private final MoodboardPermissionRepository permissionRepository;
     private final MoodboardService moodboardService;
+    private final MoodboardAccessService moodboardAccessService;
 
-    public MoodboardController(MoodboardPermissionRepository permissionRepository, MoodboardService moodboardService) {
+    public MoodboardController(MoodboardPermissionRepository permissionRepository, MoodboardService moodboardService, MoodboardAccessService moodboardAccessService) {
         this.permissionRepository = permissionRepository;
         this.moodboardService = moodboardService;
+        this.moodboardAccessService = moodboardAccessService;
     }
 
     /**
      * GET /{user}/moodboards
-     * Accessible only by:
-     *  - the owner ({user} themselves), or
-     *  - another user who has been explicitly granted access
+     * Returns only the moodboards the requester can access:
+     *  - all moodboards, if the requester is the owner
+     *  - only those with explicit per-moodboard permission, otherwise
      */
     @GetMapping("/{user}/moodboards")
-    @PreAuthorize("@moodboardAccess.canAccess(#user, authentication.name)")
-    public ResponseEntity<List<String>> getMoodboards(@PathVariable String user) {
+    public ResponseEntity<List<String>> getMoodboards(
+            @PathVariable String user,
+            Authentication authentication
+    ) {
+        String principalName = authentication.getName();
         List<String> moodboards = moodboardService.findByOwnerUsername(user)
                 .stream()
+                .filter(m -> moodboardAccessService.canAccess(m.getId(), user, principalName))
                 .map(Moodboard::getContent)
                 .toList();
         return ResponseEntity.ok(moodboards);
@@ -89,32 +97,42 @@ public class MoodboardController {
     }
 
     /**
-     * POST /{user}/moodboards/permissions?grantTo={otherUser}
-     * Only the owner can grant access to their own moodboards.
+     * POST /{user}/moodboards/{moodboardId}/permissions?grantTo={otherUser}
+     * Only the owner can grant access to a specific moodboard.
      */
-    @PostMapping("/{user}/moodboards/permissions")
+    @PostMapping("/{user}/moodboards/{moodboardId}/permissions")
     @PreAuthorize("#user == authentication.name")
     public ResponseEntity<Void> grantAccess(
             @PathVariable String user,
+            @PathVariable Long moodboardId,
             @RequestParam String grantTo
     ) {
-        if (!permissionRepository.existsByOwnerUsernameAndPermittedUsername(user, grantTo)) {
-            permissionRepository.save(new MoodboardPermission(user, grantTo));
+        Moodboard moodboard = moodboardService.findById(moodboardId);
+        if (moodboard == null || !moodboard.getOwnerUsername().equals(user)) {
+            return ResponseEntity.notFound().build();
+        }
+        if (!permissionRepository.existsByMoodboardIdAndPermittedUsername(moodboardId, grantTo)) {
+            permissionRepository.save(new MoodboardPermission(moodboardId, grantTo));
         }
         return ResponseEntity.ok().build();
     }
 
     /**
-     * DELETE /{user}/moodboards/permissions?revokeFrom={otherUser}
-     * Only the owner can revoke access.
+     * DELETE /{user}/moodboards/{moodboardId}/permissions?revokeFrom={otherUser}
+     * Only the owner can revoke access to a specific moodboard.
      */
-    @DeleteMapping("/{user}/moodboards/permissions")
+    @DeleteMapping("/{user}/moodboards/{moodboardId}/permissions")
     @PreAuthorize("#user == authentication.name")
     public ResponseEntity<Void> revokeAccess(
             @PathVariable String user,
+            @PathVariable Long moodboardId,
             @RequestParam String revokeFrom
     ) {
-        permissionRepository.deleteByOwnerUsernameAndPermittedUsername(user, revokeFrom);
+        Moodboard moodboard = moodboardService.findById(moodboardId);
+        if (moodboard == null || !moodboard.getOwnerUsername().equals(user)) {
+            return ResponseEntity.notFound().build();
+        }
+        permissionRepository.deleteByMoodboardIdAndPermittedUsername(moodboardId, revokeFrom);
         return ResponseEntity.ok().build();
     }
 }
