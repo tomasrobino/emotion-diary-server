@@ -2,7 +2,10 @@ package com.example.emotion_diary_server.service;
 
 import com.example.emotion_diary_server.model.Moodboard;
 import com.example.emotion_diary_server.repository.MoodboardRepository;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class MoodboardService {
@@ -16,7 +19,7 @@ public class MoodboardService {
         moodboardRepository.save(moodboard);
     }
 
-    public Moodboard findById(Long id) {
+    public @Nullable Moodboard findById(Long id) {
         return moodboardRepository.findById(id).orElse(null);
     }
 
@@ -30,6 +33,10 @@ public class MoodboardService {
 
     public void deleteAll() {
         moodboardRepository.deleteAll();
+    }
+
+    public List<Moodboard> findByOwnerUsername(String ownerUsername) {
+        return moodboardRepository.findByOwnerUsername(ownerUsername);
     }
 
     public void update(Moodboard moodboard) {

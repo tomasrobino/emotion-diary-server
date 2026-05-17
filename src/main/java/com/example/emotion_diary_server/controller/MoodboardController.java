@@ -1,7 +1,9 @@
 package com.example.emotion_diary_server.controller;
 
+import com.example.emotion_diary_server.model.Moodboard;
 import com.example.emotion_diary_server.security.MoodboardPermission;
 import com.example.emotion_diary_server.security.MoodboardPermissionRepository;
+import com.example.emotion_diary_server.service.MoodboardService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -12,9 +14,11 @@ import java.util.List;
 public class MoodboardController {
 
     private final MoodboardPermissionRepository permissionRepository;
+    private final MoodboardService moodboardService;
 
-    public MoodboardController(MoodboardPermissionRepository permissionRepository) {
+    public MoodboardController(MoodboardPermissionRepository permissionRepository, MoodboardService moodboardService) {
         this.permissionRepository = permissionRepository;
+        this.moodboardService = moodboardService;
     }
 
     /**
@@ -26,8 +30,11 @@ public class MoodboardController {
     @GetMapping("/{user}/moodboards")
     @PreAuthorize("@moodboardAccess.canAccess(#user, authentication.name)")
     public ResponseEntity<List<String>> getMoodboards(@PathVariable String user) {
-        // Replace with real moodboard fetching logic
-        return ResponseEntity.ok(List.of("moodboard1", "moodboard2"));
+        List<String> moodboards = moodboardService.findByOwnerUsername(user)
+                .stream()
+                .map(Moodboard::getContent)
+                .toList();
+        return ResponseEntity.ok(moodboards);
     }
 
     /**

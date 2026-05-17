@@ -15,9 +15,11 @@ public class Moodboard {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
+    private String ownerUsername;
     private String content;
 
-    public Moodboard(String content) {
+    public Moodboard(String ownerUsername, String content) {
+        this.ownerUsername = ownerUsername;
         this.content = content;
     }
 
