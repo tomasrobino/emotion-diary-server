@@ -1,20 +1,28 @@
 package com.example.emotion_diary_server.security;
 
+import com.example.emotion_diary_server.model.Moodboard;
+import com.example.emotion_diary_server.repository.MoodboardRepository;
 import org.springframework.stereotype.Service;
 
 /**
  * Used to check moodboard access per moodboard.
- * Two cases are allowed:
- *  1. The authenticated user IS the owner
- *  2. The authenticated user has been explicitly granted access to that specific moodboard
+ * Access is granted when any of these holds:
+ *  1. The authenticated user is the owner
+ *  2. The moodboard is marked public
+ *  3. The authenticated user has been explicitly granted access to that moodboard
  */
 @Service("moodboardAccess")
 public class MoodboardAccessService {
 
     private final MoodboardPermissionRepository permissionRepository;
+    private final MoodboardRepository moodboardRepository;
 
-    public MoodboardAccessService(MoodboardPermissionRepository permissionRepository) {
+    public MoodboardAccessService(
+            MoodboardPermissionRepository permissionRepository,
+            MoodboardRepository moodboardRepository
+    ) {
         this.permissionRepository = permissionRepository;
+        this.moodboardRepository = moodboardRepository;
     }
 
     /**
@@ -24,12 +32,15 @@ public class MoodboardAccessService {
      * @return true if access should be granted
      */
     public boolean canAccess(Long moodboardId, String ownerUsername, String principalName) {
-        // Case 1: user is the owner
         if (principalName.equals(ownerUsername)) {
             return true;
         }
 
-        // Case 2: user has been explicitly granted access to this specific moodboard
+        Moodboard moodboard = moodboardRepository.findById(moodboardId).orElse(null);
+        if (moodboard != null && moodboard.isPublic()) {
+            return true;
+        }
+
         return permissionRepository.existsByMoodboardIdAndPermittedUsername(moodboardId, principalName);
     }
 }

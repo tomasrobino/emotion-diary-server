@@ -1,5 +1,6 @@
 package com.example.emotion_diary_server.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -17,6 +18,9 @@ public class Moodboard {
     private Long id;
     private String ownerUsername;
     private String content;
+
+    @Column(name = "is_public", nullable = false)
+    private boolean isPublic = false;
 
     public Moodboard(String ownerUsername, String content) {
         this.ownerUsername = ownerUsername;
