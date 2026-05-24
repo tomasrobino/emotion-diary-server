@@ -22,13 +22,17 @@ public class MoodboardPermission {
     @Column(name = "moodboard_id", nullable = false)
     private Long moodboardId;
 
+    @Column(name = "owner_username", nullable = false)
+    private String ownerUsername;
+
     @Column(name = "permitted_username", nullable = false)
     private String permittedUsername;
 
     public MoodboardPermission() {}
 
-    public MoodboardPermission(Long moodboardId, String permittedUsername) {
+    public MoodboardPermission(Long moodboardId, String ownerUsername, String permittedUsername) {
         this.moodboardId = moodboardId;
+        this.ownerUsername = ownerUsername;
         this.permittedUsername = permittedUsername;
     }
 

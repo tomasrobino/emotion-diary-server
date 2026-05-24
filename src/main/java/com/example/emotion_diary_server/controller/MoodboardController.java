@@ -122,7 +122,7 @@ public class MoodboardController {
             return ResponseEntity.notFound().build();
         }
         if (!permissionRepository.existsByMoodboardIdAndPermittedUsername(moodboardId, grantTo)) {
-            permissionRepository.save(new MoodboardPermission(moodboardId, grantTo));
+            permissionRepository.save(new MoodboardPermission(moodboardId, user, grantTo));
         }
         return ResponseEntity.ok().build();
     }
