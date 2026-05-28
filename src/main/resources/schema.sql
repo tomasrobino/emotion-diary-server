@@ -1,4 +1,4 @@
-create table moodboard
+create table if not exists moodboard
 (
     id             bigint auto_increment
         primary key,
@@ -7,7 +7,7 @@ create table moodboard
     owner_username varchar(255) null
 );
 
-create table moodboard_likes
+create table if not exists moodboard_likes
 (
     id             bigint auto_increment
         primary key,
@@ -17,7 +17,7 @@ create table moodboard_likes
         unique (moodboard_id, liker_username)
 );
 
-create table moodboard_permissions
+create table if not exists moodboard_permissions
 (
     id                 bigint auto_increment
         primary key,
@@ -28,7 +28,7 @@ create table moodboard_permissions
         unique (moodboard_id, permitted_username)
 );
 
-create table user_seq
+create table if not exists user_seq
 (
     next_not_cached_value bigint(21)          not null,
     minimum_value         bigint(21)          not null,
@@ -40,7 +40,7 @@ create table user_seq
     cycle_count           bigint(21)          not null comment 'How many cycles have been done'
 );
 
-create table users
+create table if not exists users
 (
     id       bigint       not null
         primary key,
