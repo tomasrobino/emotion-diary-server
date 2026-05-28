@@ -17,6 +17,8 @@ public class Moodboard {
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
     private String ownerUsername;
+
+    @Column(columnDefinition = "LONGTEXT")
     private String content;
 
     @Column(name = "is_public", nullable = false)
@@ -35,6 +37,6 @@ public class Moodboard {
 
     @Override
     public String toString() {
-        return content;
+        return "Moodboard{id=" + id + ", owner=" + ownerUsername + "}";
     }
 }
