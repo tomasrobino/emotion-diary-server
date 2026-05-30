@@ -21,10 +21,16 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final TokenRevocationService tokenRevocationService;
     private final UserDetailsService userDetailsService;
 
-    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(
+            JwtService jwtService,
+            TokenRevocationService tokenRevocationService,
+            UserDetailsService userDetailsService
+    ) {
         this.jwtService = jwtService;
+        this.tokenRevocationService = tokenRevocationService;
         this.userDetailsService = userDetailsService;
     }
 
@@ -46,7 +52,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                if (jwtService.isTokenValid(jwt, userDetails)) {
+                if (!tokenRevocationService.isRevoked(jwt)
+                        && jwtService.isTokenValid(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
                                     userDetails,
