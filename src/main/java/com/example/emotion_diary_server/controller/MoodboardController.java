@@ -6,6 +6,7 @@ import com.example.emotion_diary_server.dto.MoodboardContentDto;
 import com.example.emotion_diary_server.dto.MoodboardCreateRequestDto;
 import com.example.emotion_diary_server.dto.MoodboardRenameRequestDto;
 import com.example.emotion_diary_server.dto.MoodboardResponseDto;
+import com.example.emotion_diary_server.dto.MoodboardsPageDto;
 import com.example.emotion_diary_server.model.Moodboard;
 import com.example.emotion_diary_server.model.MoodboardLike;
 import com.example.emotion_diary_server.model.MoodboardMedia;
@@ -19,6 +20,8 @@ import com.example.emotion_diary_server.service.MoodboardNameService;
 import com.example.emotion_diary_server.service.MoodboardService;
 import com.example.emotion_diary_server.user.UserRepository;
 import org.jspecify.annotations.Nullable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +37,9 @@ import java.util.Objects;
 
 @RestController
 public class MoodboardController {
+
+    private static final int DEFAULT_PAGE_SIZE = 24;
+    private static final int MAX_PAGE_SIZE = 50;
 
     private final MoodboardPermissionRepository permissionRepository;
     private final MoodboardLikeRepository likeRepository;
@@ -65,18 +71,38 @@ public class MoodboardController {
     }
 
     /**
-     * GET /{user}/moodboards
-     * Returns only the moodboards the requester can access:
-     *  - all moodboards, if the requester is the owner
-     *  - public moodboards and those with explicit per-moodboard permission, otherwise
+     * GET /{user}/moodboards?page=0&size=24
+     * Returns a paginated list of moodboards the requester can access (newest first).
+     * Without page/size query params, returns the full accessible list (legacy).
      */
     @GetMapping("/{user}/moodboards")
-    public ResponseEntity<List<MoodboardResponseDto>> getMoodboards(
+    public ResponseEntity<?> getMoodboards(
             @PathVariable String user,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
             Authentication authentication
     ) {
         String principalName = authentication.getName();
-        List<MoodboardResponseDto> moodboards = moodboardService.findByOwnerUsername(user)
+        if (page == null && size == null) {
+            List<MoodboardResponseDto> moodboards = moodboardService.findByOwnerUsername(user)
+                    .stream()
+                    .filter(m -> {
+                        Long id = m.getId();
+                        return id != null && moodboardAccessService.canAccess(id, user, principalName);
+                    })
+                    .map(this::toResponseDto)
+                    .toList();
+            return ResponseEntity.ok(moodboards);
+        }
+
+        int pageIndex = page != null && page >= 0 ? page : 0;
+        int pageSize = size != null && size >= 1 ? size : DEFAULT_PAGE_SIZE;
+        if (pageSize > MAX_PAGE_SIZE) {
+            pageSize = MAX_PAGE_SIZE;
+        }
+
+        Page<Moodboard> result = moodboardService.findByOwnerUsername(user, PageRequest.of(pageIndex, pageSize));
+        List<MoodboardResponseDto> items = result.getContent()
                 .stream()
                 .filter(m -> {
                     Long id = m.getId();
@@ -84,7 +110,15 @@ public class MoodboardController {
                 })
                 .map(this::toResponseDto)
                 .toList();
-        return ResponseEntity.ok(moodboards);
+
+        return ResponseEntity.ok(new MoodboardsPageDto(
+                items,
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages(),
+                result.hasNext()
+        ));
     }
 
     /**

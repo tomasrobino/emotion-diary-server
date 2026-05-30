@@ -58,6 +58,10 @@ public class MoodboardService {
         return moodboardRepository.findByOwnerUsername(ownerUsername);
     }
 
+    public Page<Moodboard> findByOwnerUsername(String ownerUsername, Pageable pageable) {
+        return moodboardRepository.findByOwnerUsernameOrderByIdDesc(ownerUsername, pageable);
+    }
+
     public Page<Moodboard> findPublicByOtherUsers(String excludeOwnerUsername, Pageable pageable) {
         return moodboardRepository.findByIsPublicTrueAndOwnerUsernameNotOrderByIdDesc(
                 excludeOwnerUsername, pageable);

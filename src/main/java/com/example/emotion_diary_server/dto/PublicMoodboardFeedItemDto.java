@@ -15,18 +15,24 @@ public class PublicMoodboardFeedItemDto {
     private @Nullable String name;
     private boolean hasThumbnail;
     private long likeCount;
+    private @Nullable MoodboardContentDto content;
 
-    public static PublicMoodboardFeedItemDto from(Moodboard moodboard, long likeCount) {
+    public static PublicMoodboardFeedItemDto from(
+            Moodboard moodboard,
+            long likeCount,
+            @Nullable MoodboardContentDto content
+    ) {
         PublicMoodboardFeedItemDto dto = new PublicMoodboardFeedItemDto();
         dto.setId(moodboard.getId());
         dto.setOwnerUsername(moodboard.getOwnerUsername());
         dto.setName(MoodboardResponseDto.resolveDisplayName(moodboard.getName()));
         dto.setHasThumbnail(moodboard.getThumbnail() != null && moodboard.getThumbnail().length > 0);
         dto.setLikeCount(likeCount);
+        dto.setContent(content);
         return dto;
     }
 
     public static PublicMoodboardFeedItemDto from(Moodboard moodboard) {
-        return from(moodboard, 0L);
+        return from(moodboard, 0L, null);
     }
 }

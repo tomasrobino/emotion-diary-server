@@ -10,6 +10,8 @@ import java.util.List;
 public interface MoodboardRepository extends JpaRepository<Moodboard, Long> {
     List<Moodboard> findByOwnerUsername(String ownerUsername);
 
+    Page<Moodboard> findByOwnerUsernameOrderByIdDesc(String ownerUsername, Pageable pageable);
+
     Page<Moodboard> findByIsPublicTrueAndOwnerUsernameNotOrderByIdDesc(
             String ownerUsername, Pageable pageable);
 }
