@@ -61,13 +61,10 @@ public class MoodboardContentService {
         if (content.getVersion() != 1) {
             throw new IllegalArgumentException("Unsupported content version: " + content.getVersion());
         }
-        if (content.getElements() != null && content.getElements().size() > properties.maxElements()) {
+        if (content.getElements().size() > properties.maxElements()) {
             throw new IllegalArgumentException(
                     "Too many elements (max " + properties.maxElements() + ")"
             );
-        }
-        if (content.getElements() == null) {
-            return;
         }
         for (MoodboardElementDto element : content.getElements()) {
             validateElement(element, moodboardId, false);
@@ -81,13 +78,10 @@ public class MoodboardContentService {
         if (content.getVersion() != 1) {
             throw new IllegalArgumentException("Unsupported content version: " + content.getVersion());
         }
-        if (content.getElements() != null && content.getElements().size() > properties.maxElements()) {
+        if (content.getElements().size() > properties.maxElements()) {
             throw new IllegalArgumentException(
                     "Too many elements (max " + properties.maxElements() + ")"
             );
-        }
-        if (content.getElements() == null) {
-            return;
         }
         for (MoodboardElementDto element : content.getElements()) {
             validateElement(element, null, true);

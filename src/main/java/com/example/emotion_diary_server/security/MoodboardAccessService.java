@@ -2,7 +2,6 @@ package com.example.emotion_diary_server.security;
 
 import com.example.emotion_diary_server.model.Moodboard;
 import com.example.emotion_diary_server.repository.MoodboardRepository;
-import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 /**
@@ -37,8 +36,7 @@ public class MoodboardAccessService {
             return true;
         }
 
-        @Nullable Moodboard moodboard = moodboardRepository.findById(moodboardId).orElse(null);
-        if (moodboard != null && moodboard.isPublic()) {
+        if (moodboardRepository.findById(moodboardId).map(Moodboard::isPublic).orElse(false)) {
             return true;
         }
 

@@ -66,7 +66,10 @@ public class MoodboardController {
         String principalName = authentication.getName();
         List<MoodboardResponseDto> moodboards = moodboardService.findByOwnerUsername(user)
                 .stream()
-                .filter(m -> moodboardAccessService.canAccess(m.getId(), user, principalName))
+                .filter(m -> {
+                    Long id = m.getId();
+                    return id != null && moodboardAccessService.canAccess(id, user, principalName);
+                })
                 .map(this::toResponseDto)
                 .toList();
         return ResponseEntity.ok(moodboards);
@@ -164,7 +167,7 @@ public class MoodboardController {
         }
         MoodboardMedia media = mediaService.upload(moodboardId, file);
         return ResponseEntity.ok(new MediaUploadResponseDto(
-                media.getId(),
+                Objects.requireNonNull(media.getId()),
                 media.getContentType(),
                 media.getSizeBytes()
         ));
