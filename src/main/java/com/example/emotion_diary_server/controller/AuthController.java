@@ -5,23 +5,17 @@ import com.example.emotion_diary_server.dto.LoginRequest;
 import com.example.emotion_diary_server.dto.LoginResponse;
 import com.example.emotion_diary_server.security.JwtService;
 import com.example.emotion_diary_server.user.AuthService;
-import com.example.emotion_diary_server.user.UsernameAlreadyExistsException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -55,7 +49,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody @Nullable LoginRequest request) {
-        String username = request != null && request.username() != null ? request.username().trim() : "";
+        String username = request != null && request.username() != null ? request.username().trim().toLowerCase() : "";
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, request != null ? request.password() : null)
         );
@@ -70,24 +64,6 @@ public class AuthController {
             authService.logout(token);
         }
         return ResponseEntity.noContent().build();
-    }
-
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<Map<String, String>> handleAuthenticationFailure(AuthenticationException ex) {
-        String message = ex instanceof BadCredentialsException
-                ? "Invalid username or password"
-                : "Authentication failed";
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", message));
-    }
-
-    @ExceptionHandler(UsernameAlreadyExistsException.class)
-    public ResponseEntity<Map<String, String>> handleUsernameAlreadyExists(UsernameAlreadyExistsException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", ex.getMessage()));
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
-        return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
     }
 
     private static @Nullable String extractBearerToken(HttpServletRequest request) {

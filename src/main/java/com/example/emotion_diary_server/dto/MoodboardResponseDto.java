@@ -18,8 +18,9 @@ public class MoodboardResponseDto {
     private @Nullable String name;
     private @Nullable MoodboardContentDto content;
     private boolean hasThumbnail;
+    private long likeCount;
 
-    public static MoodboardResponseDto from(Moodboard moodboard, MoodboardContentDto content) {
+    public static MoodboardResponseDto from(Moodboard moodboard, MoodboardContentDto content, long likeCount) {
         MoodboardResponseDto dto = new MoodboardResponseDto();
         dto.setId(moodboard.getId());
         dto.setOwnerUsername(moodboard.getOwnerUsername());
@@ -29,7 +30,12 @@ public class MoodboardResponseDto {
         dto.setHasThumbnail(
                 moodboard.getThumbnail() != null && moodboard.getThumbnail().length > 0
         );
+        dto.setLikeCount(likeCount);
         return dto;
+    }
+
+    public static MoodboardResponseDto from(Moodboard moodboard, MoodboardContentDto content) {
+        return from(moodboard, content, 0L);
     }
 
     public static String resolveDisplayName(@Nullable String name) {

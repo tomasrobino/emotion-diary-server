@@ -2,7 +2,7 @@ create table if not exists moodboard
 (
     id             bigint auto_increment
         primary key,
-    content        varchar(255) null,
+    content        longtext     null,
     is_public      bit          not null,
     owner_username varchar(255) null,
     name           varchar(100) null,
@@ -30,6 +30,25 @@ create table if not exists moodboard_permissions
         unique (moodboard_id, permitted_username)
 );
 
+create table if not exists moodboard_media
+(
+    id                bigint auto_increment
+        primary key,
+    moodboard_id      bigint       not null,
+    content_type      varchar(255) not null,
+    original_filename varchar(255) null,
+    data              longblob     not null,
+    size_bytes        bigint       not null,
+    created_at        datetime(6)  not null
+);
+
+create table if not exists revoked_tokens
+(
+    jti        varchar(255) not null
+        primary key,
+    expires_at datetime(6)  null
+);
+
 create table if not exists user_seq
 (
     next_not_cached_value bigint(21)          not null,
@@ -51,4 +70,3 @@ create table if not exists users
     constraint UKsb8bbouer5wak8vyiiy4pf2bx
         unique (username)
 );
-

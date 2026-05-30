@@ -3,6 +3,7 @@ package com.example.emotion_diary_server.controller;
 import com.example.emotion_diary_server.dto.PublicMoodboardFeedItemDto;
 import com.example.emotion_diary_server.dto.PublicMoodboardsPageDto;
 import com.example.emotion_diary_server.model.Moodboard;
+import com.example.emotion_diary_server.repository.MoodboardLikeRepository;
 import com.example.emotion_diary_server.service.MoodboardService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 public class PublicMoodboardController {
@@ -21,9 +23,14 @@ public class PublicMoodboardController {
     private static final int MAX_SIZE = 50;
 
     private final MoodboardService moodboardService;
+    private final MoodboardLikeRepository likeRepository;
 
-    public PublicMoodboardController(MoodboardService moodboardService) {
+    public PublicMoodboardController(
+            MoodboardService moodboardService,
+            MoodboardLikeRepository likeRepository
+    ) {
         this.moodboardService = moodboardService;
+        this.likeRepository = likeRepository;
     }
 
     /**
@@ -54,7 +61,10 @@ public class PublicMoodboardController {
 
         List<PublicMoodboardFeedItemDto> items = result.getContent()
                 .stream()
-                .map(PublicMoodboardFeedItemDto::from)
+                .map(moodboard -> PublicMoodboardFeedItemDto.from(
+                        moodboard,
+                        likeRepository.countByMoodboardId(Objects.requireNonNull(moodboard.getId()))
+                ))
                 .toList();
 
         return ResponseEntity.ok(new PublicMoodboardsPageDto(

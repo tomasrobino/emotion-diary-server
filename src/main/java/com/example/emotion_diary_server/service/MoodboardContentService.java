@@ -14,7 +14,7 @@ import java.util.Set;
 @Service
 public class MoodboardContentService {
 
-    private static final Set<String> ELEMENT_TYPES = Set.of("text", "image", "video", "fabric");
+    private static final Set<String> ELEMENT_TYPES = Set.of("text", "image", "fabric");
     private final ObjectMapper objectMapper;
     private final MoodboardMediaRepository mediaRepository;
     private final MoodboardProperties properties;
@@ -104,7 +104,7 @@ public class MoodboardContentService {
                     throw new IllegalArgumentException("Text element requires text");
                 }
             }
-            case "image", "video" -> {
+            case "image" -> {
                 if (creating) {
                     if (element.getAssetId() != null) {
                         throw new IllegalArgumentException(

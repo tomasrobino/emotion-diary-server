@@ -67,7 +67,7 @@ public class AuthService {
         if (!normalized.matches("[a-zA-Z0-9_-]+")) {
             throw new IllegalArgumentException("Username may only contain letters, numbers, underscores, and hyphens");
         }
-        return normalized;
+        return normalized.toLowerCase();
     }
 
     private void validatePassword(@Nullable String password) {

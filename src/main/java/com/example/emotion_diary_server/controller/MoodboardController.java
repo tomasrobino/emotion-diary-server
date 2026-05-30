@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 
@@ -94,13 +95,13 @@ public class MoodboardController {
     public ResponseEntity<MoodboardResponseDto> getMoodboard(
             @PathVariable String user,
             @PathVariable Long moodboardId,
-            Authentication authentication
+            @Nullable Authentication authentication
     ) {
         Moodboard moodboard = moodboardService.findById(moodboardId);
         if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
-        if (!moodboardAccessService.canAccess(moodboardId, user, authentication.getName())) {
+        if (!moodboardAccessService.canAccess(moodboardId, user, principalName(authentication))) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(toResponseDto(moodboard));
@@ -124,7 +125,10 @@ public class MoodboardController {
         Moodboard moodboard = new Moodboard(user, contentService.serialize(content));
         moodboard.setName(nameService.normalizeForCreate(request.getName()));
         moodboard = moodboardService.save(moodboard);
-        return ResponseEntity.ok(toResponseDto(moodboard));
+        Long createdId = moodboard.getId();
+        return ResponseEntity
+                .created(URI.create("/" + user + "/moodboards/" + createdId))
+                .body(toResponseDto(moodboard));
     }
 
     /**
@@ -224,13 +228,13 @@ public class MoodboardController {
     public ResponseEntity<byte[]> getThumbnail(
             @PathVariable String user,
             @PathVariable Long moodboardId,
-            Authentication authentication
+            @Nullable Authentication authentication
     ) {
         Moodboard moodboard = moodboardService.findById(moodboardId);
         if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
-        if (!moodboardAccessService.canAccess(moodboardId, user, authentication.getName())) {
+        if (!moodboardAccessService.canAccess(moodboardId, user, principalName(authentication))) {
             return ResponseEntity.notFound().build();
         }
         byte[] thumbnail = moodboard.getThumbnail();
@@ -245,7 +249,7 @@ public class MoodboardController {
 
     /**
      * POST /{user}/moodboards/{moodboardId}/media
-     * Uploads an image or video asset for the moodboard. Owner only.
+     * Uploads an image asset for the moodboard. Owner only.
      */
     @PostMapping(value = "/{user}/moodboards/{moodboardId}/media", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("#user == authentication.name")
@@ -275,13 +279,13 @@ public class MoodboardController {
             @PathVariable String user,
             @PathVariable Long moodboardId,
             @PathVariable Long assetId,
-            Authentication authentication
+            @Nullable Authentication authentication
     ) {
         Moodboard moodboard = moodboardService.findById(moodboardId);
         if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
-        if (!moodboardAccessService.canAccess(moodboardId, user, authentication.getName())) {
+        if (!moodboardAccessService.canAccess(moodboardId, user, principalName(authentication))) {
             return ResponseEntity.notFound().build();
         }
         MoodboardMedia media = mediaService.findByIdAndMoodboardId(assetId, moodboardId);
@@ -332,7 +336,7 @@ public class MoodboardController {
         if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
-        String grantToUsername = grantTo.trim();
+        String grantToUsername = grantTo.trim().toLowerCase();
         if (grantToUsername.isEmpty()) {
             throw new IllegalArgumentException("Se requiere un nombre de usuario");
         }
@@ -363,8 +367,29 @@ public class MoodboardController {
         if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
-        permissionRepository.deleteByMoodboardIdAndPermittedUsername(moodboardId, revokeFrom);
+        permissionRepository.deleteByMoodboardIdAndPermittedUsername(moodboardId, revokeFrom.trim().toLowerCase());
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * GET /{user}/moodboards/{moodboardId}/permissions
+     * Lists usernames with explicit access. Owner only.
+     */
+    @GetMapping("/{user}/moodboards/{moodboardId}/permissions")
+    @PreAuthorize("#user == authentication.name")
+    public ResponseEntity<List<String>> listPermissions(
+            @PathVariable String user,
+            @PathVariable Long moodboardId
+    ) {
+        Moodboard moodboard = moodboardService.findById(moodboardId);
+        if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
+            return ResponseEntity.notFound().build();
+        }
+        List<String> granted = permissionRepository.findByMoodboardId(moodboardId)
+                .stream()
+                .map(MoodboardPermission::getPermittedUsername)
+                .toList();
+        return ResponseEntity.ok(granted);
     }
 
     /**
@@ -436,13 +461,13 @@ public class MoodboardController {
     public ResponseEntity<List<String>> getLikes(
             @PathVariable String user,
             @PathVariable Long moodboardId,
-            Authentication authentication
+            @Nullable Authentication authentication
     ) {
         Moodboard moodboard = moodboardService.findById(moodboardId);
         if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
-        if (!moodboardAccessService.canAccess(moodboardId, user, authentication.getName())) {
+        if (!moodboardAccessService.canAccess(moodboardId, user, principalName(authentication))) {
             return ResponseEntity.notFound().build();
         }
         List<String> likers = likeRepository.findByMoodboardId(moodboardId)
@@ -460,13 +485,13 @@ public class MoodboardController {
     public ResponseEntity<Long> getLikeCount(
             @PathVariable String user,
             @PathVariable Long moodboardId,
-            Authentication authentication
+            @Nullable Authentication authentication
     ) {
         Moodboard moodboard = moodboardService.findById(moodboardId);
         if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
-        if (!moodboardAccessService.canAccess(moodboardId, user, authentication.getName())) {
+        if (!moodboardAccessService.canAccess(moodboardId, user, principalName(authentication))) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(likeRepository.countByMoodboardId(moodboardId));
@@ -491,7 +516,13 @@ public class MoodboardController {
 
     private MoodboardResponseDto toResponseDto(Moodboard moodboard) {
         MoodboardContentDto content = contentService.deserialize(moodboard.getContent());
-        return MoodboardResponseDto.from(moodboard, content);
+        Long id = moodboard.getId();
+        long likeCount = id != null ? likeRepository.countByMoodboardId(id) : 0L;
+        return MoodboardResponseDto.from(moodboard, content, likeCount);
+    }
+
+    private static String principalName(@Nullable Authentication authentication) {
+        return authentication != null ? authentication.getName() : "";
     }
 
     private static String contentDisposition(MoodboardMedia media) {

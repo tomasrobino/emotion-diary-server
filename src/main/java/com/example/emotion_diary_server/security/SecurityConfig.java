@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -34,6 +35,11 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login", "/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/{user}/moodboards/{moodboardId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/{user}/moodboards/{moodboardId}/thumbnail").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/{user}/moodboards/{moodboardId}/media/{assetId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/{user}/moodboards/{moodboardId}/likes").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/{user}/moodboards/{moodboardId}/likes/count").permitAll()
                         .requestMatchers("/auth/logout").authenticated()
                         .requestMatchers("/public/moodboards").authenticated()
                         .requestMatchers("/users/search").authenticated()
