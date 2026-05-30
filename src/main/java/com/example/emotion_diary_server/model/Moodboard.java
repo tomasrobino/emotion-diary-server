@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import org.jspecify.annotations.Nullable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,10 @@ public class Moodboard {
 
     @Column(length = 100)
     private @Nullable String name;
+
+    @Lob
+    @Column(columnDefinition = "LONGBLOB")
+    private @Nullable byte[] thumbnail;
 
     public Moodboard(String ownerUsername, String content) {
         this.ownerUsername = ownerUsername;

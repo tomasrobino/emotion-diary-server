@@ -35,6 +35,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login", "/auth/register").permitAll()
                         .requestMatchers("/auth/logout").authenticated()
+                        .requestMatchers("/public/moodboards").authenticated()
                         .requestMatchers("/{user}/moodboards/**").authenticated()
                         .requestMatchers("/{user}/liked-moodboards").authenticated()
                         .anyRequest().permitAll()

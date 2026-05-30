@@ -5,7 +5,8 @@ create table if not exists moodboard
     content        varchar(255) null,
     is_public      bit          not null,
     owner_username varchar(255) null,
-    name           varchar(100) null
+    name           varchar(100) null,
+    thumbnail      longblob     null
 );
 
 create table if not exists moodboard_likes

@@ -6,6 +6,8 @@ import com.example.emotion_diary_server.repository.MoodboardMediaRepository;
 import com.example.emotion_diary_server.repository.MoodboardRepository;
 import com.example.emotion_diary_server.security.MoodboardPermissionRepository;
 import org.jspecify.annotations.Nullable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -54,6 +56,11 @@ public class MoodboardService {
 
     public List<Moodboard> findByOwnerUsername(String ownerUsername) {
         return moodboardRepository.findByOwnerUsername(ownerUsername);
+    }
+
+    public Page<Moodboard> findPublicByOtherUsers(String excludeOwnerUsername, Pageable pageable) {
+        return moodboardRepository.findByIsPublicTrueAndOwnerUsernameNotOrderByIdDesc(
+                excludeOwnerUsername, pageable);
     }
 
     public Moodboard update(Moodboard moodboard) {

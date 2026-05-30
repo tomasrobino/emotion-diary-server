@@ -186,6 +186,60 @@ public class MoodboardController {
     }
 
     /**
+     * PUT /{user}/moodboards/{moodboardId}/thumbnail
+     * Uploads or replaces the moodboard thumbnail JPEG. Owner only.
+     */
+    @PutMapping(value = "/{user}/moodboards/{moodboardId}/thumbnail", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("#user == authentication.name")
+    public ResponseEntity<Void> uploadThumbnail(
+            @PathVariable String user,
+            @PathVariable Long moodboardId,
+            @RequestParam("file") MultipartFile file
+    ) throws IOException {
+        Moodboard moodboard = moodboardService.findById(moodboardId);
+        if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
+            return ResponseEntity.notFound().build();
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.equalsIgnoreCase(MediaType.IMAGE_JPEG_VALUE)) {
+            throw new IllegalArgumentException("La miniatura debe ser JPEG");
+        }
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("El archivo está vacío");
+        }
+        moodboard.setThumbnail(file.getBytes());
+        moodboardService.update(moodboard);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * GET /{user}/moodboards/{moodboardId}/thumbnail
+     * Streams the moodboard thumbnail. Requester must have access to the moodboard.
+     */
+    @GetMapping("/{user}/moodboards/{moodboardId}/thumbnail")
+    public ResponseEntity<byte[]> getThumbnail(
+            @PathVariable String user,
+            @PathVariable Long moodboardId,
+            Authentication authentication
+    ) {
+        Moodboard moodboard = moodboardService.findById(moodboardId);
+        if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
+            return ResponseEntity.notFound().build();
+        }
+        if (!moodboardAccessService.canAccess(moodboardId, user, authentication.getName())) {
+            return ResponseEntity.notFound().build();
+        }
+        byte[] thumbnail = moodboard.getThumbnail();
+        if (thumbnail == null || thumbnail.length == 0) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .header(HttpHeaders.CACHE_CONTROL, "private, max-age=3600")
+                .body(thumbnail);
+    }
+
+    /**
      * POST /{user}/moodboards/{moodboardId}/media
      * Uploads an image or video asset for the moodboard. Owner only.
      */

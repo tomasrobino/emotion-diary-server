@@ -17,6 +17,7 @@ public class MoodboardResponseDto {
     private boolean isPublic;
     private @Nullable String name;
     private @Nullable MoodboardContentDto content;
+    private boolean hasThumbnail;
 
     public static MoodboardResponseDto from(Moodboard moodboard, MoodboardContentDto content) {
         MoodboardResponseDto dto = new MoodboardResponseDto();
@@ -25,6 +26,9 @@ public class MoodboardResponseDto {
         dto.setPublic(moodboard.isPublic());
         dto.setName(resolveDisplayName(moodboard.getName()));
         dto.setContent(content);
+        dto.setHasThumbnail(
+                moodboard.getThumbnail() != null && moodboard.getThumbnail().length > 0
+        );
         return dto;
     }
 
