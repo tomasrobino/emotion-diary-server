@@ -17,6 +17,7 @@ import com.example.emotion_diary_server.service.MoodboardContentService;
 import com.example.emotion_diary_server.service.MoodboardMediaService;
 import com.example.emotion_diary_server.service.MoodboardNameService;
 import com.example.emotion_diary_server.service.MoodboardService;
+import com.example.emotion_diary_server.user.UserRepository;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -40,6 +41,7 @@ public class MoodboardController {
     private final MoodboardContentService contentService;
     private final MoodboardMediaService mediaService;
     private final MoodboardNameService nameService;
+    private final UserRepository userRepository;
 
     public MoodboardController(
             MoodboardPermissionRepository permissionRepository,
@@ -48,7 +50,8 @@ public class MoodboardController {
             MoodboardAccessService moodboardAccessService,
             MoodboardContentService contentService,
             MoodboardMediaService mediaService,
-            MoodboardNameService nameService
+            MoodboardNameService nameService,
+            UserRepository userRepository
     ) {
         this.permissionRepository = permissionRepository;
         this.likeRepository = likeRepository;
@@ -57,6 +60,7 @@ public class MoodboardController {
         this.contentService = contentService;
         this.mediaService = mediaService;
         this.nameService = nameService;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -328,8 +332,18 @@ public class MoodboardController {
         if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
-        if (!permissionRepository.existsByMoodboardIdAndPermittedUsername(moodboardId, grantTo)) {
-            permissionRepository.save(new MoodboardPermission(moodboardId, user, grantTo));
+        String grantToUsername = grantTo.trim();
+        if (grantToUsername.isEmpty()) {
+            throw new IllegalArgumentException("Se requiere un nombre de usuario");
+        }
+        if (grantToUsername.equals(user)) {
+            throw new IllegalArgumentException("No puedes darte acceso a ti mismo");
+        }
+        if (userRepository.findByUsernameIgnoreCase(grantToUsername).isEmpty()) {
+            throw new IllegalArgumentException("Usuario no encontrado");
+        }
+        if (!permissionRepository.existsByMoodboardIdAndPermittedUsername(moodboardId, grantToUsername)) {
+            permissionRepository.save(new MoodboardPermission(moodboardId, user, grantToUsername));
         }
         return ResponseEntity.ok().build();
     }
