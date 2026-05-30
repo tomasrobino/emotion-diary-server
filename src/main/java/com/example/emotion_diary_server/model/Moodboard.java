@@ -25,6 +25,9 @@ public class Moodboard {
     @Column(name = "is_public", nullable = false)
     private boolean isPublic = false;
 
+    @Column(length = 100)
+    private @Nullable String name;
+
     public Moodboard(String ownerUsername, String content) {
         this.ownerUsername = ownerUsername;
         this.content = content;

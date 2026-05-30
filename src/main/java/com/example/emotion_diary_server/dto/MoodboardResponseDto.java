@@ -10,9 +10,12 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class MoodboardResponseDto {
+    public static final String DEFAULT_NAME = "Sin título";
+
     private @Nullable Long id;
     private @Nullable String ownerUsername;
     private boolean isPublic;
+    private @Nullable String name;
     private @Nullable MoodboardContentDto content;
 
     public static MoodboardResponseDto from(Moodboard moodboard, MoodboardContentDto content) {
@@ -20,7 +23,15 @@ public class MoodboardResponseDto {
         dto.setId(moodboard.getId());
         dto.setOwnerUsername(moodboard.getOwnerUsername());
         dto.setPublic(moodboard.isPublic());
+        dto.setName(resolveDisplayName(moodboard.getName()));
         dto.setContent(content);
         return dto;
+    }
+
+    public static String resolveDisplayName(@Nullable String name) {
+        if (name == null || name.isBlank()) {
+            return DEFAULT_NAME;
+        }
+        return name.trim();
     }
 }

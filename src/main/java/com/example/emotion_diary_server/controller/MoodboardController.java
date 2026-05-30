@@ -1,7 +1,10 @@
 package com.example.emotion_diary_server.controller;
 
+import com.example.emotion_diary_server.dto.LikedMoodboardSummaryDto;
 import com.example.emotion_diary_server.dto.MediaUploadResponseDto;
 import com.example.emotion_diary_server.dto.MoodboardContentDto;
+import com.example.emotion_diary_server.dto.MoodboardCreateRequestDto;
+import com.example.emotion_diary_server.dto.MoodboardRenameRequestDto;
 import com.example.emotion_diary_server.dto.MoodboardResponseDto;
 import com.example.emotion_diary_server.model.Moodboard;
 import com.example.emotion_diary_server.model.MoodboardLike;
@@ -12,6 +15,7 @@ import com.example.emotion_diary_server.security.MoodboardPermission;
 import com.example.emotion_diary_server.security.MoodboardPermissionRepository;
 import com.example.emotion_diary_server.service.MoodboardContentService;
 import com.example.emotion_diary_server.service.MoodboardMediaService;
+import com.example.emotion_diary_server.service.MoodboardNameService;
 import com.example.emotion_diary_server.service.MoodboardService;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpHeaders;
@@ -35,6 +39,7 @@ public class MoodboardController {
     private final MoodboardAccessService moodboardAccessService;
     private final MoodboardContentService contentService;
     private final MoodboardMediaService mediaService;
+    private final MoodboardNameService nameService;
 
     public MoodboardController(
             MoodboardPermissionRepository permissionRepository,
@@ -42,7 +47,8 @@ public class MoodboardController {
             MoodboardService moodboardService,
             MoodboardAccessService moodboardAccessService,
             MoodboardContentService contentService,
-            MoodboardMediaService mediaService
+            MoodboardMediaService mediaService,
+            MoodboardNameService nameService
     ) {
         this.permissionRepository = permissionRepository;
         this.likeRepository = likeRepository;
@@ -50,6 +56,7 @@ public class MoodboardController {
         this.moodboardAccessService = moodboardAccessService;
         this.contentService = contentService;
         this.mediaService = mediaService;
+        this.nameService = nameService;
     }
 
     /**
@@ -103,11 +110,39 @@ public class MoodboardController {
     @PreAuthorize("#user == authentication.name")
     public ResponseEntity<MoodboardResponseDto> createMoodboard(
             @PathVariable String user,
-            @RequestBody @Nullable MoodboardContentDto content
+            @RequestBody @Nullable MoodboardCreateRequestDto request
     ) {
+        if (request == null || request.getContent() == null) {
+            throw new IllegalArgumentException("Se requiere el contenido del moodboard");
+        }
+        MoodboardContentDto content = request.getContent();
         contentService.validateForCreate(content);
-        Moodboard moodboard = new Moodboard(user, contentService.serialize(Objects.requireNonNull(content)));
+        Moodboard moodboard = new Moodboard(user, contentService.serialize(content));
+        moodboard.setName(nameService.normalizeForCreate(request.getName()));
         moodboard = moodboardService.save(moodboard);
+        return ResponseEntity.ok(toResponseDto(moodboard));
+    }
+
+    /**
+     * PATCH /{user}/moodboards/{moodboardId}
+     * Only the owner can rename their own moodboards.
+     */
+    @PatchMapping("/{user}/moodboards/{moodboardId}")
+    @PreAuthorize("#user == authentication.name")
+    public ResponseEntity<MoodboardResponseDto> renameMoodboard(
+            @PathVariable String user,
+            @PathVariable Long moodboardId,
+            @RequestBody @Nullable MoodboardRenameRequestDto request
+    ) {
+        Moodboard existing = moodboardService.findById(moodboardId);
+        if (existing == null || !user.equals(existing.getOwnerUsername())) {
+            return ResponseEntity.notFound().build();
+        }
+        if (request == null) {
+            throw new IllegalArgumentException("Se requiere el nombre del moodboard");
+        }
+        existing.setName(nameService.validateForRename(request.getName()));
+        Moodboard moodboard = moodboardService.update(existing);
         return ResponseEntity.ok(toResponseDto(moodboard));
     }
 
@@ -371,16 +406,19 @@ public class MoodboardController {
 
     /**
      * GET /{user}/liked-moodboards
-     * Returns moodboard IDs the user has liked.
+     * Returns summaries of moodboards the user has liked.
      */
     @GetMapping("/{user}/liked-moodboards")
     @PreAuthorize("#user == authentication.name")
-    public ResponseEntity<List<Long>> getLikedMoodboards(@PathVariable String user) {
-        List<Long> moodboardIds = likeRepository.findByLikerUsername(user)
+    public ResponseEntity<List<LikedMoodboardSummaryDto>> getLikedMoodboards(@PathVariable String user) {
+        List<LikedMoodboardSummaryDto> summaries = likeRepository.findByLikerUsername(user)
                 .stream()
                 .map(MoodboardLike::getMoodboardId)
+                .map(moodboardService::findById)
+                .filter(Objects::nonNull)
+                .map(LikedMoodboardSummaryDto::from)
                 .toList();
-        return ResponseEntity.ok(moodboardIds);
+        return ResponseEntity.ok(summaries);
     }
 
     private MoodboardResponseDto toResponseDto(Moodboard moodboard) {

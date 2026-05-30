@@ -4,7 +4,8 @@ create table if not exists moodboard
         primary key,
     content        varchar(255) null,
     is_public      bit          not null,
-    owner_username varchar(255) null
+    owner_username varchar(255) null,
+    name           varchar(100) null
 );
 
 create table if not exists moodboard_likes
