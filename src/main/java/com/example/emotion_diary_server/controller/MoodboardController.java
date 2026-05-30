@@ -509,7 +509,11 @@ public class MoodboardController {
                 .map(MoodboardLike::getMoodboardId)
                 .map(moodboardService::findById)
                 .filter(Objects::nonNull)
-                .map(LikedMoodboardSummaryDto::from)
+                .map(moodboard -> {
+                    Long id = moodboard.getId();
+                    long likeCount = id != null ? likeRepository.countByMoodboardId(id) : 0L;
+                    return LikedMoodboardSummaryDto.from(moodboard, likeCount);
+                })
                 .toList();
         return ResponseEntity.ok(summaries);
     }

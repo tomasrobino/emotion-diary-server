@@ -23,28 +23,46 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        String[] origins = corsProperties.allowedOriginsArray();
-        if (origins.length == 0) {
+        CorsConfiguration configuration = buildCorsConfiguration();
+        if (configuration.getAllowedOrigins() == null && configuration.getAllowedOriginPatterns() == null) {
             return;
         }
-        registry.addMapping("/**")
-                .allowedOrigins(origins)
+
+        var mapping = registry.addMapping("/**")
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("Authorization", "Content-Type")
                 .maxAge(3600);
+
+        if (configuration.getAllowedOrigins() != null) {
+            mapping.allowedOrigins(configuration.getAllowedOrigins().toArray(String[]::new));
+        }
+        if (configuration.getAllowedOriginPatterns() != null) {
+            mapping.allowedOriginPatterns(configuration.getAllowedOriginPatterns().toArray(String[]::new));
+        }
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", buildCorsConfiguration());
+        return source;
+    }
+
+    private CorsConfiguration buildCorsConfiguration() {
         CorsConfiguration configuration = new CorsConfiguration();
         String[] origins = corsProperties.allowedOriginsArray();
-        configuration.setAllowedOrigins(List.of(origins));
+        String[] patterns = corsProperties.allowedOriginPatternsArray();
+
+        if (origins.length > 0) {
+            configuration.setAllowedOrigins(List.of(origins));
+        }
+        if (patterns.length > 0) {
+            configuration.setAllowedOriginPatterns(List.of(patterns));
+        }
+
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setMaxAge(3600L);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
+        return configuration;
     }
 }

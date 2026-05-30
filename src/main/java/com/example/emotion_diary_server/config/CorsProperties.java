@@ -6,13 +6,24 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.util.Arrays;
 
 @ConfigurationProperties(prefix = "app.cors")
-public record CorsProperties(@Nullable String allowedOrigins) {
+public record CorsProperties(
+        @Nullable String allowedOrigins,
+        @Nullable String allowedOriginPatterns
+) {
 
     public String[] allowedOriginsArray() {
-        if (allowedOrigins == null || allowedOrigins.isBlank()) {
+        return splitCsv(allowedOrigins);
+    }
+
+    public String[] allowedOriginPatternsArray() {
+        return splitCsv(allowedOriginPatterns);
+    }
+
+    private static String[] splitCsv(@Nullable String value) {
+        if (value == null || value.isBlank()) {
             return new String[0];
         }
-        return Arrays.stream(allowedOrigins.split(","))
+        return Arrays.stream(value.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .toArray(String[]::new);

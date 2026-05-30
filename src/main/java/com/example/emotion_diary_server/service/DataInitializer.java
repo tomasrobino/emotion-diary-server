@@ -1,7 +1,5 @@
 package com.example.emotion_diary_server.service;
 
-import com.example.emotion_diary_server.model.QuizTemplate;
-import com.example.emotion_diary_server.repository.QuizTemplateRepository;
 import com.example.emotion_diary_server.user.User;
 import com.example.emotion_diary_server.user.UserRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -15,16 +13,10 @@ public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final QuizTemplateRepository quizTemplateRepository;
 
-    public DataInitializer(
-            UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
-            QuizTemplateRepository quizTemplateRepository
-    ) {
+    public DataInitializer(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.quizTemplateRepository = quizTemplateRepository;
     }
 
     @Override
@@ -36,39 +28,5 @@ public class DataInitializer implements CommandLineRunner {
             userRepository.save(user);
             System.out.println("Default user created: admin / admin123");
         }
-        seedQuizTemplates();
-    }
-
-    private void seedQuizTemplates() {
-        if (quizTemplateRepository.count() > 0) {
-            return;
-        }
-        quizTemplateRepository.save(createTemplate(
-                "¿Cómo te sientes hoy en general?",
-                "scale",
-                "[\"1\",\"2\",\"3\",\"4\",\"5\"]",
-                1
-        ));
-        quizTemplateRepository.save(createTemplate(
-                "¿Qué emoción predomina hoy?",
-                "choice",
-                "[\"Alegría\",\"Tristeza\",\"Ansiedad\",\"Calma\",\"Enfado\"]",
-                2
-        ));
-        quizTemplateRepository.save(createTemplate(
-                "¿Has dormido bien anoche?",
-                "choice",
-                "[\"Sí, muy bien\",\"Regular\",\"Mal\",\"Muy mal\"]",
-                3
-        ));
-    }
-
-    private static QuizTemplate createTemplate(String question, String type, String options, int sortOrder) {
-        QuizTemplate template = new QuizTemplate();
-        template.setQuestion(question);
-        template.setType(type);
-        template.setOptions(options);
-        template.setSortOrder(sortOrder);
-        return template;
     }
 }
