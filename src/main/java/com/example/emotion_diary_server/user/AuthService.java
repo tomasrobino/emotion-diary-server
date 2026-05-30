@@ -75,4 +75,16 @@ public class AuthService {
             throw new IllegalArgumentException("Password must be at least 6 characters");
         }
     }
+
+    @Transactional
+    public void changePassword(String username, @Nullable String currentPassword, @Nullable String newPassword) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (currentPassword == null || !passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new org.springframework.security.authentication.BadCredentialsException("Invalid current password");
+        }
+        validatePassword(newPassword);
+        user.setPassword(Objects.requireNonNull(passwordEncoder.encode(newPassword)));
+        userRepository.save(user);
+    }
 }

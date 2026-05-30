@@ -70,3 +70,41 @@ create table if not exists users
     constraint UKsb8bbouer5wak8vyiiy4pf2bx
         unique (username)
 );
+
+create table if not exists diary_entry
+(
+    id                   bigint auto_increment
+        primary key,
+    owner_username       varchar(255) not null,
+    entry_date           date         not null,
+    mood_score           int          not null,
+    text_note            text         null,
+    linked_moodboard_id  bigint       null,
+    reminder_at          datetime(6)  null,
+    created_at           datetime(6)  not null,
+    updated_at           datetime(6)  not null,
+    constraint UK_diary_entry_user_date
+        unique (owner_username, entry_date)
+);
+
+create table if not exists quiz_template
+(
+    id       bigint auto_increment
+        primary key,
+    question varchar(500) not null,
+    type     varchar(20)  not null,
+    options  longtext     null,
+    sort_order int        not null
+);
+
+create table if not exists quiz_response
+(
+    id              bigint auto_increment
+        primary key,
+    owner_username  varchar(255) not null,
+    response_date   date         not null,
+    answers         longtext     not null,
+    created_at      datetime(6)  not null,
+    constraint UK_quiz_response_user_date
+        unique (owner_username, response_date)
+);
