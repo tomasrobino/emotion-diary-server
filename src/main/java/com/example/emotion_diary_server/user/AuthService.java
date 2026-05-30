@@ -4,9 +4,12 @@ import com.example.emotion_diary_server.config.JwtProperties;
 import com.example.emotion_diary_server.dto.LoginResponse;
 import com.example.emotion_diary_server.security.JwtService;
 import com.example.emotion_diary_server.security.TokenRevocationService;
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Objects;
 
 @Service
 public class AuthService {
@@ -32,7 +35,7 @@ public class AuthService {
     }
 
     @Transactional
-    public LoginResponse register(String username, String password) {
+    public LoginResponse register(@Nullable String username, @Nullable String password) {
         String normalizedUsername = validateAndNormalizeUsername(username);
         validatePassword(password);
 
@@ -42,7 +45,7 @@ public class AuthService {
 
         User user = new User();
         user.setUsername(normalizedUsername);
-        user.setPassword(passwordEncoder.encode(password));
+        user.setPassword(Objects.requireNonNull(passwordEncoder.encode(password)));
         userRepository.save(user);
 
         String token = jwtService.generateToken(normalizedUsername);
@@ -53,7 +56,7 @@ public class AuthService {
         tokenRevocationService.revoke(token);
     }
 
-    private String validateAndNormalizeUsername(String username) {
+    private String validateAndNormalizeUsername(@Nullable String username) {
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("Username is required");
         }
@@ -67,7 +70,7 @@ public class AuthService {
         return normalized;
     }
 
-    private void validatePassword(String password) {
+    private void validatePassword(@Nullable String password) {
         if (password == null || password.length() < 6) {
             throw new IllegalArgumentException("Password must be at least 6 characters");
         }

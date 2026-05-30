@@ -1,6 +1,7 @@
 package com.example.emotion_diary_server.dto;
 
 import com.example.emotion_diary_server.model.Moodboard;
+import org.jspecify.annotations.Nullable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -9,10 +10,10 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class MoodboardResponseDto {
-    private Long id;
-    private String ownerUsername;
+    private @Nullable Long id;
+    private @Nullable String ownerUsername;
     private boolean isPublic;
-    private MoodboardContentDto content;
+    private @Nullable MoodboardContentDto content;
 
     public static MoodboardResponseDto from(Moodboard moodboard, MoodboardContentDto content) {
         MoodboardResponseDto dto = new MoodboardResponseDto();

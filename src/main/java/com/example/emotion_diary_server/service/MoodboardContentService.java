@@ -4,6 +4,7 @@ import com.example.emotion_diary_server.config.MoodboardProperties;
 import com.example.emotion_diary_server.dto.MoodboardContentDto;
 import com.example.emotion_diary_server.dto.MoodboardElementDto;
 import com.example.emotion_diary_server.repository.MoodboardMediaRepository;
+import org.jspecify.annotations.Nullable;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
@@ -42,7 +43,7 @@ public class MoodboardContentService {
         }
     }
 
-    public MoodboardContentDto deserialize(String contentJson) {
+    public MoodboardContentDto deserialize(@Nullable String contentJson) {
         if (contentJson == null || contentJson.isBlank()) {
             throw new IllegalArgumentException("Moodboard content is required");
         }
@@ -53,7 +54,7 @@ public class MoodboardContentService {
         }
     }
 
-    public void validate(MoodboardContentDto content, Long moodboardId) {
+    public void validate(@Nullable MoodboardContentDto content, Long moodboardId) {
         if (content == null) {
             throw new IllegalArgumentException("Moodboard content is required");
         }
@@ -73,7 +74,7 @@ public class MoodboardContentService {
         }
     }
 
-    public void validateForCreate(MoodboardContentDto content) {
+    public void validateForCreate(@Nullable MoodboardContentDto content) {
         if (content == null) {
             throw new IllegalArgumentException("Moodboard content is required");
         }
@@ -93,7 +94,10 @@ public class MoodboardContentService {
         }
     }
 
-    private void validateElement(MoodboardElementDto element, Long moodboardId, boolean creating) {
+    private void validateElement(@Nullable MoodboardElementDto element, @Nullable Long moodboardId, boolean creating) {
+        if (element == null) {
+            throw new IllegalArgumentException("Element is required");
+        }
         if (element.getType() == null || !ELEMENT_TYPES.contains(element.getType())) {
             throw new IllegalArgumentException("Unknown element type: " + element.getType());
         }

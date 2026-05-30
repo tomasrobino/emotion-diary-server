@@ -13,6 +13,7 @@ import com.example.emotion_diary_server.security.MoodboardPermissionRepository;
 import com.example.emotion_diary_server.service.MoodboardContentService;
 import com.example.emotion_diary_server.service.MoodboardMediaService;
 import com.example.emotion_diary_server.service.MoodboardService;
+import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 public class MoodboardController {
@@ -81,7 +83,7 @@ public class MoodboardController {
             Authentication authentication
     ) {
         Moodboard moodboard = moodboardService.findById(moodboardId);
-        if (moodboard == null || !moodboard.getOwnerUsername().equals(user)) {
+        if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
         if (!moodboardAccessService.canAccess(moodboardId, user, authentication.getName())) {
@@ -98,10 +100,10 @@ public class MoodboardController {
     @PreAuthorize("#user == authentication.name")
     public ResponseEntity<MoodboardResponseDto> createMoodboard(
             @PathVariable String user,
-            @RequestBody MoodboardContentDto content
+            @RequestBody @Nullable MoodboardContentDto content
     ) {
         contentService.validateForCreate(content);
-        Moodboard moodboard = new Moodboard(user, contentService.serialize(content));
+        Moodboard moodboard = new Moodboard(user, contentService.serialize(Objects.requireNonNull(content)));
         moodboard = moodboardService.save(moodboard);
         return ResponseEntity.ok(toResponseDto(moodboard));
     }
@@ -115,14 +117,14 @@ public class MoodboardController {
     public ResponseEntity<MoodboardResponseDto> updateMoodboard(
             @PathVariable String user,
             @PathVariable Long moodboardId,
-            @RequestBody MoodboardContentDto content
+            @RequestBody @Nullable MoodboardContentDto content
     ) {
         Moodboard existing = moodboardService.findById(moodboardId);
-        if (existing == null || !existing.getOwnerUsername().equals(user)) {
+        if (existing == null || !user.equals(existing.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
         contentService.validate(content, moodboardId);
-        existing.setContent(contentService.serialize(content));
+        existing.setContent(contentService.serialize(Objects.requireNonNull(content)));
         Moodboard moodboard = moodboardService.update(existing);
         return ResponseEntity.ok(toResponseDto(moodboard));
     }
@@ -138,7 +140,7 @@ public class MoodboardController {
             @PathVariable Long moodboardId
     ) {
         Moodboard existing = moodboardService.findById(moodboardId);
-        if (existing == null || !existing.getOwnerUsername().equals(user)) {
+        if (existing == null || !user.equals(existing.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
         moodboardService.deleteById(moodboardId);
@@ -157,7 +159,7 @@ public class MoodboardController {
             @RequestParam("file") MultipartFile file
     ) throws IOException {
         Moodboard moodboard = moodboardService.findById(moodboardId);
-        if (moodboard == null || !moodboard.getOwnerUsername().equals(user)) {
+        if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
         MoodboardMedia media = mediaService.upload(moodboardId, file);
@@ -180,7 +182,7 @@ public class MoodboardController {
             Authentication authentication
     ) {
         Moodboard moodboard = moodboardService.findById(moodboardId);
-        if (moodboard == null || !moodboard.getOwnerUsername().equals(user)) {
+        if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
         if (!moodboardAccessService.canAccess(moodboardId, user, authentication.getName())) {
@@ -208,7 +210,7 @@ public class MoodboardController {
             @PathVariable Long assetId
     ) {
         Moodboard moodboard = moodboardService.findById(moodboardId);
-        if (moodboard == null || !moodboard.getOwnerUsername().equals(user)) {
+        if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
         MoodboardMedia media = mediaService.findByIdAndMoodboardId(assetId, moodboardId);
@@ -231,7 +233,7 @@ public class MoodboardController {
             @RequestParam String grantTo
     ) {
         Moodboard moodboard = moodboardService.findById(moodboardId);
-        if (moodboard == null || !moodboard.getOwnerUsername().equals(user)) {
+        if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
         if (!permissionRepository.existsByMoodboardIdAndPermittedUsername(moodboardId, grantTo)) {
@@ -252,7 +254,7 @@ public class MoodboardController {
             @RequestParam String revokeFrom
     ) {
         Moodboard moodboard = moodboardService.findById(moodboardId);
-        if (moodboard == null || !moodboard.getOwnerUsername().equals(user)) {
+        if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
         permissionRepository.deleteByMoodboardIdAndPermittedUsername(moodboardId, revokeFrom);
@@ -271,7 +273,7 @@ public class MoodboardController {
             @RequestParam boolean isPublic
     ) {
         Moodboard moodboard = moodboardService.findById(moodboardId);
-        if (moodboard == null || !moodboard.getOwnerUsername().equals(user)) {
+        if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
         moodboard.setPublic(isPublic);
@@ -289,7 +291,7 @@ public class MoodboardController {
             Authentication authentication
     ) {
         Moodboard moodboard = moodboardService.findById(moodboardId);
-        if (moodboard == null || !moodboard.getOwnerUsername().equals(user)) {
+        if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
         String principalName = authentication.getName();
@@ -313,7 +315,7 @@ public class MoodboardController {
             Authentication authentication
     ) {
         Moodboard moodboard = moodboardService.findById(moodboardId);
-        if (moodboard == null || !moodboard.getOwnerUsername().equals(user)) {
+        if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
         likeRepository.deleteByMoodboardIdAndLikerUsername(moodboardId, authentication.getName());
@@ -331,7 +333,7 @@ public class MoodboardController {
             Authentication authentication
     ) {
         Moodboard moodboard = moodboardService.findById(moodboardId);
-        if (moodboard == null || !moodboard.getOwnerUsername().equals(user)) {
+        if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
         if (!moodboardAccessService.canAccess(moodboardId, user, authentication.getName())) {
@@ -355,7 +357,7 @@ public class MoodboardController {
             Authentication authentication
     ) {
         Moodboard moodboard = moodboardService.findById(moodboardId);
-        if (moodboard == null || !moodboard.getOwnerUsername().equals(user)) {
+        if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
         if (!moodboardAccessService.canAccess(moodboardId, user, authentication.getName())) {

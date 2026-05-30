@@ -1,7 +1,9 @@
 package com.example.emotion_diary_server.dto;
 
+import org.jspecify.annotations.Nullable;
+
 public record LoginRequest(
-        String username,
-        String password
+        @Nullable String username,
+        @Nullable String password
 ) {
 }

@@ -7,6 +7,7 @@ import com.example.emotion_diary_server.security.JwtService;
 import com.example.emotion_diary_server.user.AuthService;
 import com.example.emotion_diary_server.user.UsernameAlreadyExistsException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,16 +45,19 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<LoginResponse> register(@RequestBody LoginRequest request) {
-        LoginResponse response = authService.register(request.username(), request.password());
+    public ResponseEntity<LoginResponse> register(@RequestBody @Nullable LoginRequest request) {
+        LoginResponse response = authService.register(
+                request != null ? request.username() : null,
+                request != null ? request.password() : null
+        );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
-        String username = request.username() != null ? request.username().trim() : "";
+    public ResponseEntity<LoginResponse> login(@RequestBody @Nullable LoginRequest request) {
+        String username = request != null && request.username() != null ? request.username().trim() : "";
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, request.password())
+                new UsernamePasswordAuthenticationToken(username, request != null ? request.password() : null)
         );
         String token = jwtService.generateToken(username);
         return ResponseEntity.ok(new LoginResponse(token, jwtProperties.expirationMs()));
@@ -86,7 +90,7 @@ public class AuthController {
         return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
     }
 
-    private static String extractBearerToken(HttpServletRequest request) {
+    private static @Nullable String extractBearerToken(HttpServletRequest request) {
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             return authHeader.substring(7);

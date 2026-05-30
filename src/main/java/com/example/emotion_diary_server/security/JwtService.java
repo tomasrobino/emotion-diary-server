@@ -4,6 +4,7 @@ import com.example.emotion_diary_server.config.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +12,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -21,7 +23,9 @@ public class JwtService {
 
     public JwtService(JwtProperties jwtProperties) {
         this.jwtProperties = jwtProperties;
-        this.signingKey = Keys.hmacShaKeyFor(jwtProperties.secret().getBytes(StandardCharsets.UTF_8));
+        this.signingKey = Keys.hmacShaKeyFor(
+                Objects.requireNonNull(jwtProperties.secret()).getBytes(StandardCharsets.UTF_8)
+        );
     }
 
     public String generateToken(String username) {
@@ -36,11 +40,11 @@ public class JwtService {
                 .compact();
     }
 
-    public String extractUsername(String token) {
+    public @Nullable String extractUsername(String token) {
         return parseClaims(token).getSubject();
     }
 
-    public String extractJti(String token) {
+    public @Nullable String extractJti(String token) {
         return parseClaims(token).getId();
     }
 
@@ -50,7 +54,9 @@ public class JwtService {
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         String username = extractUsername(token);
-        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        return username != null
+                && username.equals(userDetails.getUsername())
+                && !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {

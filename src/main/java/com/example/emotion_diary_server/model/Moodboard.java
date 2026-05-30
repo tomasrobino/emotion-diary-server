@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import org.jspecify.annotations.Nullable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,11 +16,11 @@ import lombok.Setter;
 public class Moodboard {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
-    private Long id;
-    private String ownerUsername;
+    private @Nullable Long id;
+    private @Nullable String ownerUsername;
 
     @Column(columnDefinition = "LONGTEXT")
-    private String content;
+    private @Nullable String content;
 
     @Column(name = "is_public", nullable = false)
     private boolean isPublic = false;

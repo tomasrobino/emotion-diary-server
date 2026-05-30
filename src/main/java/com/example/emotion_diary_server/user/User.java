@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.Nullable;
 
 @Entity
 @Table(name = "users")
@@ -16,9 +17,9 @@ public class User {
 
     @Id
     @GeneratedValue
-    private Long id;
+    private @Nullable Long id;
 
     @Column(unique = true)
-    private String username;
-    private String password;
+    private @Nullable String username;
+    private @Nullable String password;
 }

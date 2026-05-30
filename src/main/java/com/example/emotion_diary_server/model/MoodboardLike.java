@@ -1,6 +1,7 @@
 package com.example.emotion_diary_server.model;
 
 import jakarta.persistence.*;
+import org.jspecify.annotations.Nullable;
 import lombok.Getter;
 
 /**
@@ -16,7 +17,7 @@ public class MoodboardLike {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private @Nullable Long id;
 
     @Column(name = "moodboard_id", nullable = false)
     private Long moodboardId;

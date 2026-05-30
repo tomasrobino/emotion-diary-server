@@ -1,7 +1,9 @@
 package com.example.emotion_diary_server.user;
 
-import org.springframework.stereotype.Service;
 import org.springframework.security.core.userdetails.*;
+import org.springframework.stereotype.Service;
+
+import java.util.Objects;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -21,8 +23,8 @@ public class UserService implements UserDetailsService {
                         new UsernameNotFoundException("User not found"));
 
         return org.springframework.security.core.userdetails.User
-                .withUsername(user.getUsername())
-                .password(user.getPassword())
+                .withUsername(Objects.requireNonNull(user.getUsername()))
+                .password(Objects.requireNonNull(user.getPassword()))
                 .roles("USER")
                 .build();
     }
