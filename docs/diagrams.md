@@ -1,8 +1,6 @@
 # Emotion Diary Server — Diagramas de arquitectura
 
-Modelo de base de datos y estructura en capas de la aplicación Spring Boot.
-
-Abre este archivo en la vista previa de Markdown (VS Code / Cursor / GitHub) para renderizar los diagramas Mermaid.
+Modelo de base de datos y estructura en capas.
 
 ---
 
