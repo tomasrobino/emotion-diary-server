@@ -2,7 +2,9 @@ package com.example.emotion_diary_server.service;
 
 import com.example.emotion_diary_server.dto.DiaryEntryRequestDto;
 import com.example.emotion_diary_server.model.DiaryEntry;
+import com.example.emotion_diary_server.model.Moodboard;
 import com.example.emotion_diary_server.repository.DiaryEntryRepository;
+import com.example.emotion_diary_server.repository.MoodboardRepository;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,9 +18,14 @@ import java.util.Objects;
 public class DiaryEntryService {
 
     private final DiaryEntryRepository diaryEntryRepository;
+    private final MoodboardRepository moodboardRepository;
 
-    public DiaryEntryService(DiaryEntryRepository diaryEntryRepository) {
+    public DiaryEntryService(
+            DiaryEntryRepository diaryEntryRepository,
+            MoodboardRepository moodboardRepository
+    ) {
         this.diaryEntryRepository = diaryEntryRepository;
+        this.moodboardRepository = moodboardRepository;
     }
 
     public List<DiaryEntry> findInRange(String ownerUsername, LocalDate from, LocalDate to) {
@@ -38,6 +45,7 @@ public class DiaryEntryService {
     public DiaryEntry upsert(String ownerUsername, DiaryEntryRequestDto request) {
         validateMoodScore(request.moodScore());
         LocalDate entryDate = Objects.requireNonNull(request.entryDate(), "entryDate is required");
+        validateLinkedMoodboard(ownerUsername, request.linkedMoodboardId());
 
         DiaryEntry entry = diaryEntryRepository
                 .findByOwnerUsernameAndEntryDate(ownerUsername, entryDate)
@@ -66,6 +74,17 @@ public class DiaryEntryService {
                     return true;
                 })
                 .orElse(false);
+    }
+
+    private void validateLinkedMoodboard(String ownerUsername, @Nullable Long linkedMoodboardId) {
+        if (linkedMoodboardId == null) {
+            return;
+        }
+        Moodboard moodboard = moodboardRepository.findById(linkedMoodboardId)
+                .orElseThrow(() -> new IllegalArgumentException("linkedMoodboardId does not exist"));
+        if (!ownerUsername.equals(moodboard.getOwnerUsername())) {
+            throw new IllegalArgumentException("linkedMoodboardId does not belong to the current user");
+        }
     }
 
     private static void validateMoodScore(int moodScore) {

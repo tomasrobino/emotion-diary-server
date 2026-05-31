@@ -1,3 +1,13 @@
+create table if not exists users
+(
+    id       bigint       not null
+        primary key,
+    password varchar(255) null,
+    username varchar(255) null,
+    constraint UKsb8bbouer5wak8vyiiy4pf2bx
+        unique (username)
+);
+
 create table if not exists moodboard
 (
     id             bigint auto_increment
@@ -6,7 +16,9 @@ create table if not exists moodboard
     is_public      bit          not null,
     owner_username varchar(255) null,
     name           varchar(100) null,
-    thumbnail      longblob     null
+    thumbnail      longblob     null,
+    constraint fk_moodboard_owner
+        foreign key (owner_username) references users (username) on delete restrict
 );
 
 create table if not exists moodboard_likes
@@ -16,7 +28,11 @@ create table if not exists moodboard_likes
     liker_username varchar(255) not null,
     moodboard_id   bigint       not null,
     constraint UKdxp746oxrm3qaotsqby7ic1nw
-        unique (moodboard_id, liker_username)
+        unique (moodboard_id, liker_username),
+    constraint fk_likes_moodboard
+        foreign key (moodboard_id) references moodboard (id) on delete cascade,
+    constraint fk_likes_liker
+        foreign key (liker_username) references users (username) on delete restrict
 );
 
 create table if not exists moodboard_permissions
@@ -27,7 +43,13 @@ create table if not exists moodboard_permissions
     owner_username     varchar(255) not null,
     permitted_username varchar(255) not null,
     constraint UK3f0q8b8a47tah2dv9lh9618jj
-        unique (moodboard_id, permitted_username)
+        unique (moodboard_id, permitted_username),
+    constraint fk_permissions_moodboard
+        foreign key (moodboard_id) references moodboard (id) on delete cascade,
+    constraint fk_permissions_owner
+        foreign key (owner_username) references users (username) on delete restrict,
+    constraint fk_permissions_permitted
+        foreign key (permitted_username) references users (username) on delete restrict
 );
 
 create table if not exists moodboard_media
@@ -39,7 +61,29 @@ create table if not exists moodboard_media
     original_filename varchar(255) null,
     data              longblob     not null,
     size_bytes        bigint       not null,
-    created_at        datetime(6)  not null
+    created_at        datetime(6)  not null,
+    constraint fk_media_moodboard
+        foreign key (moodboard_id) references moodboard (id) on delete cascade
+);
+
+create table if not exists diary_entry
+(
+    id                   bigint auto_increment
+        primary key,
+    owner_username       varchar(255) not null,
+    entry_date           date         not null,
+    mood_score           int          not null,
+    text_note            text         null,
+    linked_moodboard_id  bigint       null,
+    reminder_at          datetime(6)  null,
+    created_at           datetime(6)  not null,
+    updated_at           datetime(6)  not null,
+    constraint UK_diary_entry_user_date
+        unique (owner_username, entry_date),
+    constraint fk_diary_owner
+        foreign key (owner_username) references users (username) on delete restrict,
+    constraint fk_diary_linked_moodboard
+        foreign key (linked_moodboard_id) references moodboard (id) on delete set null
 );
 
 create table if not exists revoked_tokens
@@ -59,30 +103,4 @@ create table if not exists user_seq
     cache_size            bigint(21) unsigned not null,
     cycle_option          tinyint(1) unsigned not null comment '0 if no cycles are allowed, 1 if the sequence should begin a new cycle when maximum_value is passed',
     cycle_count           bigint(21)          not null comment 'How many cycles have been done'
-);
-
-create table if not exists users
-(
-    id       bigint       not null
-        primary key,
-    password varchar(255) null,
-    username varchar(255) null,
-    constraint UKsb8bbouer5wak8vyiiy4pf2bx
-        unique (username)
-);
-
-create table if not exists diary_entry
-(
-    id                   bigint auto_increment
-        primary key,
-    owner_username       varchar(255) not null,
-    entry_date           date         not null,
-    mood_score           int          not null,
-    text_note            text         null,
-    linked_moodboard_id  bigint       null,
-    reminder_at          datetime(6)  null,
-    created_at           datetime(6)  not null,
-    updated_at           datetime(6)  not null,
-    constraint UK_diary_entry_user_date
-        unique (owner_username, entry_date)
 );
