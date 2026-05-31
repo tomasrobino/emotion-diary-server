@@ -83,7 +83,8 @@ erDiagram
 | Unicidad del diario | Una entrada por usuario y día (`owner_username` + `entry_date`) |
 | Unicidad de likes | Un like por usuario y moodboard (`moodboard_id` + `liker_username`) |
 | Unicidad de permisos | Una concesión por usuario y moodboard (`moodboard_id` + `permitted_username`) |
-| Eliminar usuario | RESTRICT mientras existan referencias desde moodboards, entradas del diario, likes o permisos |
+| Eliminar usuario (directo en BD) | RESTRICT mientras existan referencias desde moodboards, entradas del diario, likes o permisos |
+| Eliminar cuenta (API) | `UserDeletionService` borra en orden: entradas del diario → moodboards propios → likes del usuario → permisos concedidos al usuario → fila en `users`. Sin cambios de esquema |
 | Eliminar moodboard | CASCADE en media, likes y permisos; SET NULL en `diary_entry.linked_moodboard_id` |
 | RevokedToken | Tabla independiente — sin FK hacia `users` |
 
@@ -91,7 +92,7 @@ erDiagram
 
 ## Diagrama de clases
 
-Arquitectura Spring Boot en capas (~27 clases principales). Los controladores delegan en servicios; los servicios usan repositorios para acceder a las entidades.
+Arquitectura Spring Boot en capas (~28 clases principales). Los controladores delegan en servicios; los servicios usan repositorios para acceder a las entidades.
 
 ```mermaid
 classDiagram
@@ -122,6 +123,7 @@ classDiagram
     }
     class ProfileController {
         +changePassword()
+        +deleteAccount()
     }
     class MetricsController {
         +getMetrics()
@@ -135,6 +137,14 @@ classDiagram
         +register()
         +logout()
         +changePassword()
+        +deleteAccount()
+    }
+    class UserDeletionService {
+        +deleteAccount()
+    }
+    class TokenRevocationService {
+        +revoke()
+        +isRevoked()
     }
     class UserService {
         +loadUserByUsername()
@@ -190,6 +200,7 @@ classDiagram
     }
     class DiaryEntryRepository {
         <<interface>>
+        +deleteByOwner_Username()
     }
     class MoodboardRepository {
         <<interface>>
@@ -199,9 +210,11 @@ classDiagram
     }
     class MoodboardLikeRepository {
         <<interface>>
+        +deleteByLiker_Username()
     }
     class MoodboardPermissionRepository {
         <<interface>>
+        +deleteByPermitted_Username()
     }
     class RevokedTokenRepository {
         <<interface>>
@@ -253,6 +266,8 @@ classDiagram
 
     namespace servicio {
         class AuthService
+        class UserDeletionService
+        class TokenRevocationService
         class UserService
         class DiaryEntryService
         class MoodboardService
@@ -301,6 +316,14 @@ classDiagram
 
     AuthService --> UserRepository
     AuthService --> UserService
+    AuthService --> UserDeletionService
+    UserDeletionService --> UserRepository
+    UserDeletionService --> DiaryEntryRepository
+    UserDeletionService --> MoodboardService
+    UserDeletionService --> MoodboardLikeRepository
+    UserDeletionService --> MoodboardPermissionRepository
+    UserDeletionService --> TokenRevocationService
+    AuthService --> TokenRevocationService
     UserService --> UserRepository
     DiaryEntryService --> DiaryEntryRepository
     DiaryEntryService --> EntityReferences
@@ -317,6 +340,7 @@ classDiagram
     MetricsService --> DiaryEntryRepository
     EntityReferences --> UserRepository
     EntityReferences --> MoodboardRepository
+    TokenRevocationService --> RevokedTokenRepository
 
     UserRepository ..> User
     DiaryEntryRepository ..> DiaryEntry
@@ -343,6 +367,43 @@ classDiagram
 - **EntityReferences**: Helper compartido para búsquedas consistentes con `requireUser()` / `requireMoodboard()` y errores de validación.
 - **Servicios de seguridad**: `MoodboardAccessService` (autorización), `MoodboardPermissionService` (concesiones) y `MoodboardLikeService` (likes) conviven con los servicios de dominio.
 - **Mapeo JPA**: `@ManyToOne(LAZY)` unidireccional — sin `@OneToMany` en las entidades padre.
+- **Eliminar cuenta**: cascada a nivel de aplicación (`UserDeletionService`), no `ON DELETE CASCADE` en BD.
+- **Exportar moodboard**: descarga PNG en el cliente (Fabric.js `toDataURL` a resolución completa); la miniatura en servidor sigue generándose al guardar con escala reducida.
+
+### Flujo de petición — eliminar cuenta
+
+```mermaid
+sequenceDiagram
+    participant Cliente
+    participant ProfileController
+    participant AuthService
+    participant UserDeletionService
+    participant Repositorios
+
+    Cliente->>ProfileController: DELETE /{user}/profile
+    ProfileController->>AuthService: deleteAccount(user, password, token)
+    AuthService->>UserDeletionService: deleteAccount(...)
+    UserDeletionService->>Repositorios: borrar diario, moodboards, likes, permisos
+    UserDeletionService->>Repositorios: revocar JWT y borrar usuario
+    ProfileController-->>Cliente: 204 No Content
+```
+
+### Exportar moodboard (cliente)
+
+Sin endpoint de backend. El editor y la vista usan `FabricMoodboardEditor.exportImage` → `downloadBlob` en el navegador.
+
+```mermaid
+sequenceDiagram
+    participant Usuario
+    participant MoodboardPage
+    participant FabricMoodboardEditor
+    participant Navegador
+
+    Usuario->>MoodboardPage: Descargar imagen
+    MoodboardPage->>FabricMoodboardEditor: exportImageRef (PNG, multiplier 1)
+    FabricMoodboardEditor->>FabricMoodboardEditor: canvas.toDataURL
+    MoodboardPage->>Navegador: downloadBlob
+```
 
 ### Flujo de petición (ejemplo)
 

@@ -16,4 +16,7 @@ public interface MoodboardPermissionRepository extends JpaRepository<MoodboardPe
     void deleteByMoodboard_Id(Long moodboardId);
 
     List<MoodboardPermission> findByMoodboard_Id(Long moodboardId);
+
+    @Transactional
+    void deleteByPermitted_Username(String permittedUsername);
 }

@@ -26,6 +26,7 @@ classDiagram
     }
     class ProfileController {
         +changePassword()
+        +deleteAccount()
     }
     class MetricsController {
         +getMetrics()
@@ -39,6 +40,14 @@ classDiagram
         +register()
         +logout()
         +changePassword()
+        +deleteAccount()
+    }
+    class UserDeletionService {
+        +deleteAccount()
+    }
+    class TokenRevocationService {
+        +revoke()
+        +isRevoked()
     }
     class UserService {
         +loadUserByUsername()
@@ -94,6 +103,7 @@ classDiagram
     }
     class DiaryEntryRepository {
         <<interface>>
+        +deleteByOwner_Username()
     }
     class MoodboardRepository {
         <<interface>>
@@ -103,9 +113,11 @@ classDiagram
     }
     class MoodboardLikeRepository {
         <<interface>>
+        +deleteByLiker_Username()
     }
     class MoodboardPermissionRepository {
         <<interface>>
+        +deleteByPermitted_Username()
     }
     class RevokedTokenRepository {
         <<interface>>
@@ -157,6 +169,8 @@ classDiagram
 
     namespace servicio {
         class AuthService
+        class UserDeletionService
+        class TokenRevocationService
         class UserService
         class DiaryEntryService
         class MoodboardService
@@ -205,6 +219,14 @@ classDiagram
 
     AuthService --> UserRepository
     AuthService --> UserService
+    AuthService --> UserDeletionService
+    UserDeletionService --> UserRepository
+    UserDeletionService --> DiaryEntryRepository
+    UserDeletionService --> MoodboardService
+    UserDeletionService --> MoodboardLikeRepository
+    UserDeletionService --> MoodboardPermissionRepository
+    UserDeletionService --> TokenRevocationService
+    AuthService --> TokenRevocationService
     UserService --> UserRepository
     DiaryEntryService --> DiaryEntryRepository
     DiaryEntryService --> EntityReferences
@@ -221,6 +243,7 @@ classDiagram
     MetricsService --> DiaryEntryRepository
     EntityReferences --> UserRepository
     EntityReferences --> MoodboardRepository
+    TokenRevocationService --> RevokedTokenRepository
 
     UserRepository ..> User
     DiaryEntryRepository ..> DiaryEntry

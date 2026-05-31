@@ -19,19 +19,22 @@ public class AuthService {
     private final JwtService jwtService;
     private final JwtProperties jwtProperties;
     private final TokenRevocationService tokenRevocationService;
+    private final UserDeletionService userDeletionService;
 
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             JwtProperties jwtProperties,
-            TokenRevocationService tokenRevocationService
+            TokenRevocationService tokenRevocationService,
+            UserDeletionService userDeletionService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.jwtProperties = jwtProperties;
         this.tokenRevocationService = tokenRevocationService;
+        this.userDeletionService = userDeletionService;
     }
 
     @Transactional
@@ -86,5 +89,10 @@ public class AuthService {
         validatePassword(newPassword);
         user.setPassword(Objects.requireNonNull(passwordEncoder.encode(newPassword)));
         userRepository.save(user);
+    }
+
+    @Transactional
+    public void deleteAccount(String username, @Nullable String password, @Nullable String token) {
+        userDeletionService.deleteAccount(username, password, token);
     }
 }

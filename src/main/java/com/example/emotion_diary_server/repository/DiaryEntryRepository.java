@@ -1,6 +1,7 @@
 package com.example.emotion_diary_server.repository;
 
 import com.example.emotion_diary_server.model.DiaryEntry;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
@@ -16,4 +17,7 @@ public interface DiaryEntryRepository extends JpaRepository<DiaryEntry, Long> {
     );
 
     Optional<DiaryEntry> findByOwner_UsernameAndEntryDate(String ownerUsername, LocalDate entryDate);
+
+    @Transactional
+    void deleteByOwner_Username(String ownerUsername);
 }
