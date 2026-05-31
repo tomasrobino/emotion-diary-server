@@ -8,11 +8,6 @@ Modelo de base de datos y estructura en capas.
 
 Siete entidades JPA. Todas las FK hacia usuarios referencian `users.username` (no `users.id`). Las asociaciones son unidireccionales `@ManyToOne(LAZY)`.
 
-![Diagrama entidad-relación](images/erd.png)
-
-<details>
-<summary>Código Mermaid (fuente)</summary>
-
 ```mermaid
 erDiagram
     users {
@@ -81,8 +76,6 @@ erDiagram
     moodboard ||--o| diary_entry : "vinculado a (opcional)"
 ```
 
-</details>
-
 ### Restricciones y comportamiento al eliminar
 
 | Regla | Detalle |
@@ -99,11 +92,6 @@ erDiagram
 ## Diagrama de clases
 
 Arquitectura Spring Boot en capas (~27 clases principales). Los controladores delegan en servicios; los servicios usan repositorios para acceder a las entidades.
-
-![Diagrama de clases](images/diagrama-clases.png)
-
-<details>
-<summary>Código Mermaid (fuente)</summary>
 
 ```mermaid
 classDiagram
@@ -349,8 +337,6 @@ classDiagram
     MoodboardPermission --> User : autorizado
 ```
 
-</details>
-
 ### Notas de arquitectura
 
 - **Capas**: Los controladores solo mapean HTTP; la lógica de negocio está en los servicios; la persistencia pasa por repositorios Spring Data.
@@ -359,11 +345,6 @@ classDiagram
 - **Mapeo JPA**: `@ManyToOne(LAZY)` unidireccional — sin `@OneToMany` en las entidades padre.
 
 ### Flujo de petición (ejemplo)
-
-![Flujo de petición — like de moodboard](images/flujo-like.png)
-
-<details>
-<summary>Código Mermaid (fuente)</summary>
 
 ```mermaid
 sequenceDiagram
@@ -380,5 +361,3 @@ sequenceDiagram
     MoodboardLikeService->>MoodboardLikeRepository: save(MoodboardLike)
     MoodboardController-->>Cliente: 200 OK
 ```
-
-</details>
