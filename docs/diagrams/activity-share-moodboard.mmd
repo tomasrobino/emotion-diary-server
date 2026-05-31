@@ -1,0 +1,11 @@
+%% CU-04 — Compartir moodboard
+flowchart LR
+    A([Inicio]) --> B[Abrir opciones de compartir]
+    B --> C{Que accion?}
+    C -->|Conceder| D[Buscar y seleccionar usuario]
+    D --> E[Registrar permiso]
+    C -->|Revocar| F[Quitar permiso de usuario]
+    C -->|Publicar| G[Marcar moodboard como publico]
+    E --> H([Fin])
+    F --> H
+    G --> H

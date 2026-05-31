@@ -1,0 +1,9 @@
+%% CU-07 — Consultar metricas
+flowchart LR
+    A([Inicio]) --> B[Elegir periodo 7d / 30d / 90d]
+    B --> C[Consultar entradas del diario]
+    C --> D[Calcular media, racha y tendencia]
+    D --> E[Mostrar grafico y resumen]
+    E --> F{Cambiar periodo?}
+    F -->|Si| B
+    F -->|No| G([Fin])

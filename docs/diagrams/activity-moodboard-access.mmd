@@ -1,0 +1,9 @@
+%% Comprobar acceso a moodboard
+flowchart LR
+    A([Solicitud de acceso]) --> B{Es el propietario?}
+    B -->|Si| OK([Acceso permitido])
+    B -->|No| C{Es publico?}
+    C -->|Si| OK
+    C -->|No| D{Tiene permiso?}
+    D -->|Si| OK
+    D -->|No| DENY([Acceso denegado])

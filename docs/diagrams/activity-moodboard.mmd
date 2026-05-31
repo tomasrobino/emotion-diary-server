@@ -1,0 +1,13 @@
+%% CU-03 — Crear y editar moodboard
+flowchart LR
+    A([Inicio]) --> B[Editar lienzo]
+    B --> C{Subir imagen?}
+    C -->|Si| D[Subir archivo al servidor]
+    D --> B
+    C -->|No| E[Guardar moodboard]
+    E --> F{Es nuevo?}
+    F -->|Si| G[Crear en base de datos]
+    F -->|No| H[Actualizar en base de datos]
+    G --> I[Guardar miniatura]
+    H --> I
+    I --> J([Fin])

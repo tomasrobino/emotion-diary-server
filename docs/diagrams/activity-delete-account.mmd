@@ -1,0 +1,11 @@
+%% CU-08 — Eliminar cuenta
+flowchart LR
+    A([Inicio]) --> B[Confirmar con password]
+    B --> C{Password correcta?}
+    C -->|No| D[Mostrar error]
+    D --> B
+    C -->|Si| E[Borrar diario y moodboards]
+    E --> F[Borrar likes y permisos]
+    F --> G[Revocar sesion y eliminar usuario]
+    G --> H[Redirigir a login]
+    H --> I([Fin])

@@ -1,0 +1,12 @@
+%% CU-01 / CU-02 — Registro e inicio de sesion
+flowchart LR
+    A([Inicio]) --> B{Registro o login?}
+    B -->|Registro| C[Enviar username y password]
+    B -->|Login| C
+    C --> D{Datos validos?}
+    D -->|No| E[Mostrar error]
+    E --> C
+    D -->|Si| F[Crear usuario o verificar credenciales]
+    F --> G[Generar JWT]
+    G --> H[Guardar token y entrar al dashboard]
+    H --> I([Fin])
