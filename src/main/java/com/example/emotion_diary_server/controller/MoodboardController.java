@@ -8,19 +8,16 @@ import com.example.emotion_diary_server.dto.MoodboardRenameRequestDto;
 import com.example.emotion_diary_server.dto.MoodboardResponseDto;
 import com.example.emotion_diary_server.dto.MoodboardsPageDto;
 import com.example.emotion_diary_server.model.Moodboard;
-import com.example.emotion_diary_server.model.MoodboardLike;
 import com.example.emotion_diary_server.model.MoodboardMedia;
-import com.example.emotion_diary_server.repository.MoodboardLikeRepository;
 import com.example.emotion_diary_server.security.MoodboardAccessService;
-import com.example.emotion_diary_server.security.MoodboardPermission;
-import com.example.emotion_diary_server.security.MoodboardPermissionRepository;
+import com.example.emotion_diary_server.security.MoodboardPermissionService;
 import com.example.emotion_diary_server.service.MoodboardContentService;
+import com.example.emotion_diary_server.service.MoodboardLikeService;
 import com.example.emotion_diary_server.service.MoodboardMediaService;
 import com.example.emotion_diary_server.service.MoodboardNameService;
 import com.example.emotion_diary_server.persistence.EntityReferences;
 import com.example.emotion_diary_server.service.MoodboardService;
 import com.example.emotion_diary_server.user.User;
-import com.example.emotion_diary_server.user.UserRepository;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -43,35 +40,32 @@ public class MoodboardController {
     private static final int DEFAULT_PAGE_SIZE = 24;
     private static final int MAX_PAGE_SIZE = 50;
 
-    private final MoodboardPermissionRepository permissionRepository;
-    private final MoodboardLikeRepository likeRepository;
+    private final MoodboardPermissionService permissionService;
+    private final MoodboardLikeService likeService;
     private final MoodboardService moodboardService;
     private final MoodboardAccessService moodboardAccessService;
     private final MoodboardContentService contentService;
     private final MoodboardMediaService mediaService;
     private final MoodboardNameService nameService;
-    private final UserRepository userRepository;
     private final EntityReferences entityReferences;
 
     public MoodboardController(
-            MoodboardPermissionRepository permissionRepository,
-            MoodboardLikeRepository likeRepository,
+            MoodboardPermissionService permissionService,
+            MoodboardLikeService likeService,
             MoodboardService moodboardService,
             MoodboardAccessService moodboardAccessService,
             MoodboardContentService contentService,
             MoodboardMediaService mediaService,
             MoodboardNameService nameService,
-            UserRepository userRepository,
             EntityReferences entityReferences
     ) {
-        this.permissionRepository = permissionRepository;
-        this.likeRepository = likeRepository;
+        this.permissionService = permissionService;
+        this.likeService = likeService;
         this.moodboardService = moodboardService;
         this.moodboardAccessService = moodboardAccessService;
         this.contentService = contentService;
         this.mediaService = mediaService;
         this.nameService = nameService;
-        this.userRepository = userRepository;
         this.entityReferences = entityReferences;
     }
 
@@ -376,21 +370,7 @@ public class MoodboardController {
         if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
-        String grantToUsername = grantTo.trim().toLowerCase();
-        if (grantToUsername.isEmpty()) {
-            throw new IllegalArgumentException("Se requiere un nombre de usuario");
-        }
-        if (grantToUsername.equals(user)) {
-            throw new IllegalArgumentException("No puedes darte acceso a ti mismo");
-        }
-        if (userRepository.findByUsernameIgnoreCase(grantToUsername).isEmpty()) {
-            throw new IllegalArgumentException("Usuario no encontrado");
-        }
-        if (!permissionRepository.existsByMoodboard_IdAndPermitted_Username(moodboardId, grantToUsername)) {
-            User owner = entityReferences.requireUser(user);
-            User permitted = entityReferences.requireUser(grantToUsername);
-            permissionRepository.save(new MoodboardPermission(moodboard, owner, permitted));
-        }
+        permissionService.grantAccess(moodboard, user, grantTo);
         return ResponseEntity.ok().build();
     }
 
@@ -409,7 +389,7 @@ public class MoodboardController {
         if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
-        permissionRepository.deleteByMoodboard_IdAndPermitted_Username(moodboardId, revokeFrom.trim().toLowerCase());
+        permissionService.revokeAccess(moodboardId, revokeFrom);
         return ResponseEntity.ok().build();
     }
 
@@ -427,10 +407,7 @@ public class MoodboardController {
         if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
-        List<String> granted = permissionRepository.findByMoodboard_Id(moodboardId)
-                .stream()
-                .map(MoodboardPermission::getPermittedUsername)
-                .toList();
+        List<String> granted = permissionService.listPermittedUsernames(moodboardId);
         return ResponseEntity.ok(granted);
     }
 
@@ -471,10 +448,7 @@ public class MoodboardController {
         if (!moodboardAccessService.canAccess(moodboardId, user, principalName)) {
             return ResponseEntity.notFound().build();
         }
-        if (!likeRepository.existsByMoodboard_IdAndLiker_Username(moodboardId, principalName)) {
-            User liker = entityReferences.requireUser(principalName);
-            likeRepository.save(new MoodboardLike(moodboard, liker));
-        }
+        likeService.like(moodboard, principalName);
         return ResponseEntity.ok().build();
     }
 
@@ -492,7 +466,7 @@ public class MoodboardController {
         if (moodboard == null || !user.equals(moodboard.getOwnerUsername())) {
             return ResponseEntity.notFound().build();
         }
-        likeRepository.deleteByMoodboard_IdAndLiker_Username(moodboardId, authentication.getName());
+        likeService.unlike(moodboardId, authentication.getName());
         return ResponseEntity.ok().build();
     }
 
@@ -513,10 +487,7 @@ public class MoodboardController {
         if (!moodboardAccessService.canAccess(moodboardId, user, principalName(authentication))) {
             return ResponseEntity.notFound().build();
         }
-        List<String> likers = likeRepository.findByMoodboard_Id(moodboardId)
-                .stream()
-                .map(MoodboardLike::getLikerUsername)
-                .toList();
+        List<String> likers = likeService.getLikerUsernames(moodboardId);
         return ResponseEntity.ok(likers);
     }
 
@@ -537,7 +508,7 @@ public class MoodboardController {
         if (!moodboardAccessService.canAccess(moodboardId, user, principalName(authentication))) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(likeRepository.countByMoodboard_Id(moodboardId));
+        return ResponseEntity.ok(likeService.countByMoodboardId(moodboardId));
     }
 
     /**
@@ -547,12 +518,11 @@ public class MoodboardController {
     @GetMapping("/{user}/liked-moodboards")
     @PreAuthorize("#user == authentication.name")
     public ResponseEntity<List<LikedMoodboardSummaryDto>> getLikedMoodboards(@PathVariable String user) {
-        List<LikedMoodboardSummaryDto> summaries = likeRepository.findByLiker_Username(user)
+        List<LikedMoodboardSummaryDto> summaries = likeService.getLikedMoodboards(user)
                 .stream()
-                .map(MoodboardLike::getMoodboard)
                 .map(moodboard -> {
                     Long id = moodboard.getId();
-                    long likeCount = id != null ? likeRepository.countByMoodboard_Id(id) : 0L;
+                    long likeCount = id != null ? likeService.countByMoodboardId(id) : 0L;
                     return LikedMoodboardSummaryDto.from(moodboard, likeCount);
                 })
                 .toList();
@@ -562,7 +532,7 @@ public class MoodboardController {
     private MoodboardResponseDto toResponseDto(Moodboard moodboard) {
         MoodboardContentDto content = contentService.deserialize(moodboard.getContent());
         Long id = moodboard.getId();
-        long likeCount = id != null ? likeRepository.countByMoodboard_Id(id) : 0L;
+        long likeCount = id != null ? likeService.countByMoodboardId(id) : 0L;
         return MoodboardResponseDto.from(moodboard, content, likeCount);
     }
 

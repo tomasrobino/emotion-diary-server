@@ -3,8 +3,8 @@ package com.example.emotion_diary_server.controller;
 import com.example.emotion_diary_server.dto.PublicMoodboardFeedItemDto;
 import com.example.emotion_diary_server.dto.PublicMoodboardsPageDto;
 import com.example.emotion_diary_server.model.Moodboard;
-import com.example.emotion_diary_server.repository.MoodboardLikeRepository;
 import com.example.emotion_diary_server.service.MoodboardContentService;
+import com.example.emotion_diary_server.service.MoodboardLikeService;
 import com.example.emotion_diary_server.service.MoodboardService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,16 +24,16 @@ public class PublicMoodboardController {
     private static final int MAX_SIZE = 50;
 
     private final MoodboardService moodboardService;
-    private final MoodboardLikeRepository likeRepository;
+    private final MoodboardLikeService likeService;
     private final MoodboardContentService contentService;
 
     public PublicMoodboardController(
             MoodboardService moodboardService,
-            MoodboardLikeRepository likeRepository,
+            MoodboardLikeService likeService,
             MoodboardContentService contentService
     ) {
         this.moodboardService = moodboardService;
-        this.likeRepository = likeRepository;
+        this.likeService = likeService;
         this.contentService = contentService;
     }
 
@@ -67,7 +67,7 @@ public class PublicMoodboardController {
                 .stream()
                 .map(moodboard -> PublicMoodboardFeedItemDto.from(
                         moodboard,
-                        likeRepository.countByMoodboard_Id(Objects.requireNonNull(moodboard.getId())),
+                        likeService.countByMoodboardId(Objects.requireNonNull(moodboard.getId())),
                         contentService.deserialize(moodboard.getContent())
                 ))
                 .toList();
