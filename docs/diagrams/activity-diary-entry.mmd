@@ -1,0 +1,50 @@
+%% Diagrama de actividad — Registrar entrada diario (CU-06)
+flowchart TB
+    subgraph usuario [Usuario]
+        A1([Inicio]) --> A2[Seleccionar fecha en calendario]
+        A2 --> A3{Existe entrada?}
+        A3 -->|Si| A4[Cargar datos existentes]
+        A3 -->|No| A5[Mostrar formulario vacio]
+        A4 --> A6[Introducir mood 1-5 y nota]
+        A5 --> A6
+        A6 --> A7{Anadir recordatorio?}
+        A7 -->|Si| A8[Seleccionar fecha/hora]
+        A7 -->|No| A9{Vincular moodboard?}
+        A8 --> A9
+        A9 -->|Si| A10[Seleccionar o crear moodboard]
+        A9 -->|No| A11[Pulsar Guardar]
+        A10 --> A11
+    end
+
+    subgraph frontend [Frontend React]
+        A11 --> F1[Validar formulario cliente]
+        F1 --> F2{Valido?}
+        F2 -->|No| F3[Mostrar errores]
+        F3 --> A6
+        F2 -->|Si| F4[POST diary/entries JSON]
+        F4 --> F5{Respuesta OK?}
+        F5 -->|Si| F6[Actualizar calendario y confirmacion]
+        F5 -->|No| F7[Mostrar error API]
+        F7 --> A6
+    end
+
+    subgraph api [API Spring Boot]
+        F4 --> B1[DiaryController upsertEntry]
+        B1 --> B2[DiaryEntryService upsert]
+        B2 --> B3{Usuario autorizado?}
+        B3 -->|No| B4[401 Unauthorized]
+        B3 -->|Si| B5[Validar moodScore y fecha]
+        B5 --> B6{Validacion OK?}
+        B6 -->|No| B7[400 Bad Request]
+        B6 -->|Si| B8[Persistir o actualizar]
+    end
+
+    subgraph bd [MariaDB]
+        B8 --> D1[(diary_entry)]
+        D1 --> D2[Retornar DiaryEntryResponseDto]
+    end
+
+    D2 --> F5
+    B4 --> F5
+    B7 --> F5
+    F6 --> A12([Fin])

@@ -1,0 +1,27 @@
+%% Diagrama de despliegue — E-Diary
+flowchart LR
+    subgraph cliente [Cliente]
+        Browser[Navegador web]
+    end
+
+    subgraph host [Servidor / Docker Host]
+        subgraph front_container [Contenedor front nginx:80]
+            Nginx[nginx]
+            Static[React SPA estatica]
+            Nginx --> Static
+        end
+
+        subgraph app_container [Contenedor spring_app:8080]
+            Spring[Spring Boot API]
+            JWT[JWT Filter]
+            Spring --> JWT
+        end
+
+        subgraph db_container [Contenedor mariadb_db:3306]
+            MariaDB[(MariaDB 11)]
+        end
+    end
+
+    Browser -->|HTTP puerto 80| Nginx
+    Browser -->|REST JSON puerto 8080 Bearer JWT| Spring
+    Spring -->|JDBC| MariaDB

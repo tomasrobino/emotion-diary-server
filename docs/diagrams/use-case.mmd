@@ -1,0 +1,40 @@
+%% Diagrama de casos de uso — E-Diary
+flowchart TB
+    subgraph actores [Actores]
+        Invitado((Usuario invitado))
+        Registrado((Usuario registrado))
+        Visitante((Visitante publico))
+    end
+
+    subgraph sistema [Sistema E-Diary]
+        CU01[CU-01 Registrarse]
+        CU02[CU-02 Iniciar sesion]
+        CU03[CU-03 Crear y editar moodboard]
+        CU04[CU-04 Compartir moodboard]
+        CU05[CU-05 Explorar y dar like]
+        CU06[CU-06 Registrar entrada diario]
+        CU07[CU-07 Consultar metricas]
+        CU08[CU-08 Gestionar cuenta]
+        CU09[CU-09 Exportar imagen PNG]
+        CU10[CU-10 Ver moodboard publico]
+    end
+
+    Invitado --> CU01
+    Invitado --> CU02
+    Invitado --> CU10
+
+    Registrado --> CU02
+    Registrado --> CU03
+    Registrado --> CU04
+    Registrado --> CU05
+    Registrado --> CU06
+    Registrado --> CU07
+    Registrado --> CU08
+    Registrado --> CU09
+
+    Visitante --> CU10
+    Visitante --> CU09
+
+    CU01 -.->|extend| CU02
+    CU03 -.->|include| CU04
+    CU06 -.->|include| CU07
