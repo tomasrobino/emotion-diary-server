@@ -1,14 +1,14 @@
-# Emotion Diary Server — Architecture Diagrams
+# Emotion Diary Server — Diagramas de arquitectura
 
-Database model and layered application structure for the Spring Boot backend.
+Modelo de base de datos y estructura en capas de la aplicación Spring Boot.
 
-Open this file in Markdown preview (VS Code / Cursor / GitHub) to render the Mermaid diagrams.
+Abre este archivo en la vista previa de Markdown (VS Code / Cursor / GitHub) para renderizar los diagramas Mermaid.
 
 ---
 
-## Entity Relationship Diagram
+## Diagrama entidad-relación
 
-Seven JPA entities. All user FKs reference `users.username` (not `users.id`). Associations are unidirectional `@ManyToOne(LAZY)`.
+Siete entidades JPA. Todas las FK hacia usuarios referencian `users.username` (no `users.id`). Las asociaciones son unidireccionales `@ManyToOne(LAZY)`.
 
 ```mermaid
 erDiagram
@@ -67,33 +67,33 @@ erDiagram
         timestamp expires_at
     }
 
-    users ||--o{ moodboard : "owns (owner_username)"
-    users ||--|{ diary_entry : "owns (owner_username)"
-    users ||--o{ moodboard_likes : "likes (liker_username)"
-    users ||--o{ moodboard_permissions : "grants (owner_username)"
-    users ||--o{ moodboard_permissions : "receives (permitted_username)"
-    moodboard ||--o{ moodboard_media : "contains"
-    moodboard ||--o{ moodboard_likes : "liked_by"
-    moodboard ||--o{ moodboard_permissions : "shared_via"
-    moodboard ||--o| diary_entry : "linked_to (optional)"
+    users ||--o{ moodboard : "posee (owner_username)"
+    users ||--|{ diary_entry : "posee (owner_username)"
+    users ||--o{ moodboard_likes : "da like (liker_username)"
+    users ||--o{ moodboard_permissions : "concede (owner_username)"
+    users ||--o{ moodboard_permissions : "recibe (permitted_username)"
+    moodboard ||--o{ moodboard_media : "contiene"
+    moodboard ||--o{ moodboard_likes : "recibe likes"
+    moodboard ||--o{ moodboard_permissions : "compartido mediante"
+    moodboard ||--o| diary_entry : "vinculado a (opcional)"
 ```
 
-### Constraints and delete behavior
+### Restricciones y comportamiento al eliminar
 
-| Rule | Detail |
-|------|--------|
-| Diary uniqueness | One entry per user per day (`owner_username` + `entry_date`) |
-| Like uniqueness | One like per user per moodboard (`moodboard_id` + `liker_username`) |
-| Permission uniqueness | One grant per user per moodboard (`moodboard_id` + `permitted_username`) |
-| Delete user | RESTRICT while referenced by moodboards, diary entries, likes, or permissions |
-| Delete moodboard | CASCADE to media, likes, permissions; SET NULL on `diary_entry.linked_moodboard_id` |
-| RevokedToken | Standalone table — no FK to `users` |
+| Regla | Detalle |
+|-------|---------|
+| Unicidad del diario | Una entrada por usuario y día (`owner_username` + `entry_date`) |
+| Unicidad de likes | Un like por usuario y moodboard (`moodboard_id` + `liker_username`) |
+| Unicidad de permisos | Una concesión por usuario y moodboard (`moodboard_id` + `permitted_username`) |
+| Eliminar usuario | RESTRICT mientras existan referencias desde moodboards, entradas del diario, likes o permisos |
+| Eliminar moodboard | CASCADE en media, likes y permisos; SET NULL en `diary_entry.linked_moodboard_id` |
+| RevokedToken | Tabla independiente — sin FK hacia `users` |
 
 ---
 
-## Class Diagram
+## Diagrama de clases
 
-Layered Spring Boot architecture (~27 key classes). Controllers delegate to services; services use repositories to access entities.
+Arquitectura Spring Boot en capas (~27 clases principales). Los controladores delegan en servicios; los servicios usan repositorios para acceder a las entidades.
 
 ```mermaid
 classDiagram
@@ -242,7 +242,7 @@ classDiagram
         +expiresAt
     }
 
-    namespace controller {
+    namespace controlador {
         class AuthController
         class DiaryController
         class MoodboardController
@@ -253,7 +253,7 @@ classDiagram
         class GlobalExceptionHandler
     }
 
-    namespace service {
+    namespace servicio {
         class AuthService
         class UserService
         class DiaryEntryService
@@ -267,7 +267,7 @@ classDiagram
         class EntityReferences
     }
 
-    namespace repository {
+    namespace repositorio {
         class UserRepository
         class DiaryEntryRepository
         class MoodboardRepository
@@ -277,7 +277,7 @@ classDiagram
         class RevokedTokenRepository
     }
 
-    namespace model {
+    namespace modelo {
         class User
         class Moodboard
         class DiaryEntry
@@ -328,38 +328,38 @@ classDiagram
     MoodboardPermissionRepository ..> MoodboardPermission
     RevokedTokenRepository ..> RevokedToken
 
-    DiaryEntry --> User : owner
-    DiaryEntry --> Moodboard : linkedMoodboard
-    Moodboard --> User : owner
+    DiaryEntry --> User : propietario
+    DiaryEntry --> Moodboard : moodboardVinculado
+    Moodboard --> User : propietario
     MoodboardMedia --> Moodboard
     MoodboardLike --> Moodboard
-    MoodboardLike --> User : liker
+    MoodboardLike --> User : usuarioQueDaLike
     MoodboardPermission --> Moodboard
-    MoodboardPermission --> User : owner
-    MoodboardPermission --> User : permitted
+    MoodboardPermission --> User : propietario
+    MoodboardPermission --> User : autorizado
 ```
 
-### Architecture notes
+### Notas de arquitectura
 
-- **Layering**: Controllers handle HTTP mapping only; business logic lives in services; persistence goes through Spring Data repositories.
-- **EntityReferences**: Shared helper for consistent `requireUser()` / `requireMoodboard()` lookups with validation errors.
-- **Security services**: `MoodboardAccessService` (authorization), `MoodboardPermissionService` (grants), and `MoodboardLikeService` (likes) sit alongside domain services.
-- **JPA mapping**: Unidirectional `@ManyToOne(LAZY)` — no `@OneToMany` on parent entities.
+- **Capas**: Los controladores solo mapean HTTP; la lógica de negocio está en los servicios; la persistencia pasa por repositorios Spring Data.
+- **EntityReferences**: Helper compartido para búsquedas consistentes con `requireUser()` / `requireMoodboard()` y errores de validación.
+- **Servicios de seguridad**: `MoodboardAccessService` (autorización), `MoodboardPermissionService` (concesiones) y `MoodboardLikeService` (likes) conviven con los servicios de dominio.
+- **Mapeo JPA**: `@ManyToOne(LAZY)` unidireccional — sin `@OneToMany` en las entidades padre.
 
-### Request flow (example)
+### Flujo de petición (ejemplo)
 
 ```mermaid
 sequenceDiagram
-    participant Client
+    participant Cliente
     participant MoodboardController
     participant MoodboardLikeService
     participant MoodboardAccessService
     participant MoodboardLikeRepository
 
-    Client->>MoodboardController: POST /{user}/moodboards/{id}/likes
+    Cliente->>MoodboardController: POST /{user}/moodboards/{id}/likes
     MoodboardController->>MoodboardAccessService: canAccess(id, user, principal)
     MoodboardAccessService-->>MoodboardController: true
     MoodboardController->>MoodboardLikeService: like(moodboard, principal)
     MoodboardLikeService->>MoodboardLikeRepository: save(MoodboardLike)
-    MoodboardController-->>Client: 200 OK
+    MoodboardController-->>Cliente: 200 OK
 ```
