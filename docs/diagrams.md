@@ -368,7 +368,7 @@ classDiagram
 - **Servicios de seguridad**: `MoodboardAccessService` (autorización), `MoodboardPermissionService` (concesiones) y `MoodboardLikeService` (likes) conviven con los servicios de dominio.
 - **Mapeo JPA**: `@ManyToOne(LAZY)` unidireccional — sin `@OneToMany` en las entidades padre.
 - **Eliminar cuenta**: cascada a nivel de aplicación (`UserDeletionService`), no `ON DELETE CASCADE` en BD.
-- **Exportar moodboard**: descarga PNG en el cliente (Fabric.js `toDataURL` a resolución completa); la miniatura en servidor sigue generándose al guardar con escala reducida.
+- **Exportar moodboard**: descarga PNG en el cliente vía `canvasExport.exportCanvasToBlob` (restablece viewport, calcula bounds de todo el contenido y exporta con `toDataURL`); la miniatura al guardar usa el mismo helper con escala JPEG reducida.
 
 ### Flujo de petición — eliminar cuenta
 
@@ -390,18 +390,24 @@ sequenceDiagram
 
 ### Exportar moodboard (cliente)
 
-Sin endpoint de backend. El editor y la vista usan `FabricMoodboardEditor.exportImage` → `downloadBlob` en el navegador.
+Sin endpoint de backend. El editor y la vista llaman a `FabricMoodboardEditor.exportImage` → `canvasExport.exportCanvasToBlob` → `downloadBlob`.
+
+Antes de exportar, el helper restablece el viewport (zoom/pan), descarta la selección activa y calcula el rectángulo que engloba el lienzo completo y todos los objetos visibles — incluido contenido fuera del área visible en pantalla.
 
 ```mermaid
 sequenceDiagram
     participant Usuario
     participant MoodboardPage
     participant FabricMoodboardEditor
+    participant CanvasExport
     participant Navegador
 
     Usuario->>MoodboardPage: Descargar imagen
-    MoodboardPage->>FabricMoodboardEditor: exportImageRef (PNG, multiplier 1)
-    FabricMoodboardEditor->>FabricMoodboardEditor: canvas.toDataURL
+    MoodboardPage->>FabricMoodboardEditor: exportImageRef
+    FabricMoodboardEditor->>CanvasExport: exportCanvasToBlob PNG
+    CanvasExport->>CanvasExport: reset viewport + content bounds
+    CanvasExport->>CanvasExport: toDataURL
+    FabricMoodboardEditor-->>MoodboardPage: Blob
     MoodboardPage->>Navegador: downloadBlob
 ```
 
