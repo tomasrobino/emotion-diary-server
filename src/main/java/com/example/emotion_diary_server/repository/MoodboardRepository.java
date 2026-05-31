@@ -8,10 +8,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface MoodboardRepository extends JpaRepository<Moodboard, Long> {
-    List<Moodboard> findByOwnerUsername(String ownerUsername);
+    List<Moodboard> findByOwner_Username(String ownerUsername);
 
-    Page<Moodboard> findByOwnerUsernameOrderByIdDesc(String ownerUsername, Pageable pageable);
+    Page<Moodboard> findByOwner_UsernameOrderByIdDesc(String ownerUsername, Pageable pageable);
 
-    Page<Moodboard> findByIsPublicTrueAndOwnerUsernameNotOrderByIdDesc(
+    Page<Moodboard> findByIsPublicTrueAndOwner_UsernameNotOrderByIdDesc(
             String ownerUsername, Pageable pageable);
 }

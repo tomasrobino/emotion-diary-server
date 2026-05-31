@@ -3,8 +3,9 @@ package com.example.emotion_diary_server.service;
 import com.example.emotion_diary_server.dto.DiaryEntryRequestDto;
 import com.example.emotion_diary_server.model.DiaryEntry;
 import com.example.emotion_diary_server.model.Moodboard;
+import com.example.emotion_diary_server.persistence.EntityReferences;
 import com.example.emotion_diary_server.repository.DiaryEntryRepository;
-import com.example.emotion_diary_server.repository.MoodboardRepository;
+import com.example.emotion_diary_server.user.User;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,48 +19,46 @@ import java.util.Objects;
 public class DiaryEntryService {
 
     private final DiaryEntryRepository diaryEntryRepository;
-    private final MoodboardRepository moodboardRepository;
+    private final EntityReferences entityReferences;
 
-    public DiaryEntryService(
-            DiaryEntryRepository diaryEntryRepository,
-            MoodboardRepository moodboardRepository
-    ) {
+    public DiaryEntryService(DiaryEntryRepository diaryEntryRepository, EntityReferences entityReferences) {
         this.diaryEntryRepository = diaryEntryRepository;
-        this.moodboardRepository = moodboardRepository;
+        this.entityReferences = entityReferences;
     }
 
     public List<DiaryEntry> findInRange(String ownerUsername, LocalDate from, LocalDate to) {
         if (from.isAfter(to)) {
             throw new IllegalArgumentException("'from' must not be after 'to'");
         }
-        return diaryEntryRepository.findByOwnerUsernameAndEntryDateBetweenOrderByEntryDateAsc(
+        return diaryEntryRepository.findByOwner_UsernameAndEntryDateBetweenOrderByEntryDateAsc(
                 ownerUsername, from, to
         );
     }
 
     public @Nullable DiaryEntry findByDate(String ownerUsername, LocalDate date) {
-        return diaryEntryRepository.findByOwnerUsernameAndEntryDate(ownerUsername, date).orElse(null);
+        return diaryEntryRepository.findByOwner_UsernameAndEntryDate(ownerUsername, date).orElse(null);
     }
 
     @Transactional
     public DiaryEntry upsert(String ownerUsername, DiaryEntryRequestDto request) {
         validateMoodScore(request.moodScore());
         LocalDate entryDate = Objects.requireNonNull(request.entryDate(), "entryDate is required");
-        validateLinkedMoodboard(ownerUsername, request.linkedMoodboardId());
+        User owner = entityReferences.requireUser(ownerUsername);
+        Moodboard linkedMoodboard = resolveLinkedMoodboard(ownerUsername, request.linkedMoodboardId());
 
         DiaryEntry entry = diaryEntryRepository
-                .findByOwnerUsernameAndEntryDate(ownerUsername, entryDate)
+                .findByOwner_UsernameAndEntryDate(ownerUsername, entryDate)
                 .orElseGet(DiaryEntry::new);
 
         Instant now = Instant.now();
         if (entry.getId() == null) {
             entry.setCreatedAt(now);
         }
-        entry.setOwnerUsername(ownerUsername);
+        entry.setOwner(owner);
         entry.setEntryDate(entryDate);
         entry.setMoodScore(request.moodScore());
         entry.setTextNote(normalizeText(request.textNote()));
-        entry.setLinkedMoodboardId(request.linkedMoodboardId());
+        entry.setLinkedMoodboard(linkedMoodboard);
         entry.setReminderAt(request.reminderAt());
         entry.setUpdatedAt(now);
 
@@ -68,7 +67,7 @@ public class DiaryEntryService {
 
     @Transactional
     public boolean deleteByDate(String ownerUsername, LocalDate date) {
-        return diaryEntryRepository.findByOwnerUsernameAndEntryDate(ownerUsername, date)
+        return diaryEntryRepository.findByOwner_UsernameAndEntryDate(ownerUsername, date)
                 .map(entry -> {
                     diaryEntryRepository.delete(entry);
                     return true;
@@ -76,15 +75,15 @@ public class DiaryEntryService {
                 .orElse(false);
     }
 
-    private void validateLinkedMoodboard(String ownerUsername, @Nullable Long linkedMoodboardId) {
+    private @Nullable Moodboard resolveLinkedMoodboard(String ownerUsername, @Nullable Long linkedMoodboardId) {
         if (linkedMoodboardId == null) {
-            return;
+            return null;
         }
-        Moodboard moodboard = moodboardRepository.findById(linkedMoodboardId)
-                .orElseThrow(() -> new IllegalArgumentException("linkedMoodboardId does not exist"));
+        Moodboard moodboard = entityReferences.requireMoodboard(linkedMoodboardId);
         if (!ownerUsername.equals(moodboard.getOwnerUsername())) {
             throw new IllegalArgumentException("linkedMoodboardId does not belong to the current user");
         }
+        return moodboard;
     }
 
     private static void validateMoodScore(int moodScore) {

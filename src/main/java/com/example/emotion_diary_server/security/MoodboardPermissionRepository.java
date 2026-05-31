@@ -7,13 +7,13 @@ import java.util.List;
 
 public interface MoodboardPermissionRepository extends JpaRepository<MoodboardPermission, Long> {
 
-    boolean existsByMoodboardIdAndPermittedUsername(Long moodboardId, String permittedUsername);
+    boolean existsByMoodboard_IdAndPermitted_Username(Long moodboardId, String permittedUsername);
 
     @Transactional
-    void deleteByMoodboardIdAndPermittedUsername(Long moodboardId, String permittedUsername);
+    void deleteByMoodboard_IdAndPermitted_Username(Long moodboardId, String permittedUsername);
 
     @Transactional
-    void deleteByMoodboardId(Long moodboardId);
+    void deleteByMoodboard_Id(Long moodboardId);
 
-    List<MoodboardPermission> findByMoodboardId(Long moodboardId);
+    List<MoodboardPermission> findByMoodboard_Id(Long moodboardId);
 }

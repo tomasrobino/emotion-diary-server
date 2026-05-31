@@ -1,5 +1,6 @@
 package com.example.emotion_diary_server.service;
 
+import com.example.emotion_diary_server.model.Moodboard;
 import com.example.emotion_diary_server.model.MoodboardMedia;
 import com.example.emotion_diary_server.repository.MoodboardMediaRepository;
 import org.jspecify.annotations.Nullable;
@@ -27,7 +28,7 @@ public class MoodboardMediaService {
         this.mediaRepository = mediaRepository;
     }
 
-    public MoodboardMedia upload(Long moodboardId, MultipartFile file) throws IOException {
+    public MoodboardMedia upload(Moodboard moodboard, MultipartFile file) throws IOException {
         if (file.isEmpty()) {
             throw new IllegalArgumentException("File is empty");
         }
@@ -44,7 +45,7 @@ public class MoodboardMediaService {
         }
         byte[] data = file.getBytes();
         MoodboardMedia media = new MoodboardMedia(
-                moodboardId,
+                moodboard,
                 normalizedType,
                 file.getOriginalFilename(),
                 data
@@ -53,15 +54,15 @@ public class MoodboardMediaService {
     }
 
     public @Nullable MoodboardMedia findByIdAndMoodboardId(Long assetId, Long moodboardId) {
-        return mediaRepository.findByIdAndMoodboardId(assetId, moodboardId).orElse(null);
+        return mediaRepository.findByIdAndMoodboard_Id(assetId, moodboardId).orElse(null);
     }
 
     public void deleteByIdAndMoodboardId(Long assetId, Long moodboardId) {
-        mediaRepository.findByIdAndMoodboardId(assetId, moodboardId)
+        mediaRepository.findByIdAndMoodboard_Id(assetId, moodboardId)
                 .ifPresent(mediaRepository::delete);
     }
 
     public void deleteByMoodboardId(Long moodboardId) {
-        mediaRepository.deleteByMoodboardId(moodboardId);
+        mediaRepository.deleteByMoodboard_Id(moodboardId);
     }
 }

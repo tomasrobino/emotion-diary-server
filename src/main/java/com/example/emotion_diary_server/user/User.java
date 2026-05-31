@@ -1,5 +1,6 @@
 package com.example.emotion_diary_server.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -21,5 +22,6 @@ public class User {
 
     @Column(unique = true)
     private @Nullable String username;
+    @JsonIgnore
     private @Nullable String password;
 }

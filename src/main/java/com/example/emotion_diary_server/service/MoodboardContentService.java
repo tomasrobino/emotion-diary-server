@@ -116,7 +116,7 @@ public class MoodboardContentService {
                         throw new IllegalArgumentException(element.getType() + " element requires assetId");
                     }
                     if (moodboardId != null
-                            && !mediaRepository.existsByIdAndMoodboardId(element.getAssetId(), moodboardId)) {
+                            && !mediaRepository.existsByIdAndMoodboard_Id(element.getAssetId(), moodboardId)) {
                         throw new IllegalArgumentException(
                                 "assetId " + element.getAssetId() + " does not belong to this moodboard"
                         );

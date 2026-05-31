@@ -40,6 +40,6 @@ public class MoodboardAccessService {
             return true;
         }
 
-        return permissionRepository.existsByMoodboardIdAndPermittedUsername(moodboardId, principalName);
+        return permissionRepository.existsByMoodboard_IdAndPermitted_Username(moodboardId, principalName);
     }
 }

@@ -23,7 +23,7 @@ public class MetricsService {
         LocalDate from = to.minusDays(days - 1L);
 
         List<DiaryEntry> entries = diaryEntryRepository
-                .findByOwnerUsernameAndEntryDateBetweenOrderByEntryDateAsc(ownerUsername, from, to);
+                .findByOwner_UsernameAndEntryDateBetweenOrderByEntryDateAsc(ownerUsername, from, to);
 
         double average = entries.isEmpty()
                 ? 0.0
@@ -49,7 +49,7 @@ public class MetricsService {
         LocalDate cursor = LocalDate.now();
         int streak = 0;
         while (true) {
-            if (diaryEntryRepository.findByOwnerUsernameAndEntryDate(ownerUsername, cursor).isEmpty()) {
+            if (diaryEntryRepository.findByOwner_UsernameAndEntryDate(ownerUsername, cursor).isEmpty()) {
                 break;
             }
             streak++;

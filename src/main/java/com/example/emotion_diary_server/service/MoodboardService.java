@@ -38,15 +38,15 @@ public class MoodboardService {
     }
 
     public List<Moodboard> findByOwnerUsername(String ownerUsername) {
-        return moodboardRepository.findByOwnerUsername(ownerUsername);
+        return moodboardRepository.findByOwner_Username(ownerUsername);
     }
 
     public Page<Moodboard> findByOwnerUsername(String ownerUsername, Pageable pageable) {
-        return moodboardRepository.findByOwnerUsernameOrderByIdDesc(ownerUsername, pageable);
+        return moodboardRepository.findByOwner_UsernameOrderByIdDesc(ownerUsername, pageable);
     }
 
     public Page<Moodboard> findPublicByOtherUsers(String excludeOwnerUsername, Pageable pageable) {
-        return moodboardRepository.findByIsPublicTrueAndOwnerUsernameNotOrderByIdDesc(
+        return moodboardRepository.findByIsPublicTrueAndOwner_UsernameNotOrderByIdDesc(
                 excludeOwnerUsername, pageable);
     }
 

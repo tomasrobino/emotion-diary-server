@@ -67,7 +67,7 @@ public class PublicMoodboardController {
                 .stream()
                 .map(moodboard -> PublicMoodboardFeedItemDto.from(
                         moodboard,
-                        likeRepository.countByMoodboardId(Objects.requireNonNull(moodboard.getId())),
+                        likeRepository.countByMoodboard_Id(Objects.requireNonNull(moodboard.getId())),
                         contentService.deserialize(moodboard.getContent())
                 ))
                 .toList();

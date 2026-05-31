@@ -1,12 +1,23 @@
 package com.example.emotion_diary_server.security;
 
-import jakarta.persistence.*;
+import com.example.emotion_diary_server.model.Moodboard;
+import com.example.emotion_diary_server.user.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import org.jspecify.annotations.Nullable;
 import lombok.Getter;
 
 /**
- * Represents an explicit permission grant:
- * "permittedUsername is allowed to access moodboard with moodboardId."
+ * Represents an explicit permission grant for a moodboard.
  */
 @Getter
 @Entity
@@ -20,21 +31,52 @@ public class MoodboardPermission {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private @Nullable Long id;
 
-    @Column(name = "moodboard_id", nullable = false)
-    private Long moodboardId;
+    @JsonIgnore
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "moodboard_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_permissions_moodboard")
+    )
+    private Moodboard moodboard;
 
-    @Column(name = "owner_username", nullable = false)
-    private String ownerUsername;
+    @JsonIgnore
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "owner_username",
+            referencedColumnName = "username",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_permissions_owner")
+    )
+    private User owner;
 
-    @Column(name = "permitted_username", nullable = false)
-    private String permittedUsername;
+    @JsonIgnore
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "permitted_username",
+            referencedColumnName = "username",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_permissions_permitted")
+    )
+    private User permitted;
 
     public MoodboardPermission() {}
 
-    public MoodboardPermission(Long moodboardId, String ownerUsername, String permittedUsername) {
-        this.moodboardId = moodboardId;
-        this.ownerUsername = ownerUsername;
-        this.permittedUsername = permittedUsername;
+    public MoodboardPermission(Moodboard moodboard, User owner, User permitted) {
+        this.moodboard = moodboard;
+        this.owner = owner;
+        this.permitted = permitted;
     }
 
+    public Long getMoodboardId() {
+        return moodboard.getId();
+    }
+
+    public String getOwnerUsername() {
+        return owner.getUsername();
+    }
+
+    public String getPermittedUsername() {
+        return permitted.getUsername();
+    }
 }

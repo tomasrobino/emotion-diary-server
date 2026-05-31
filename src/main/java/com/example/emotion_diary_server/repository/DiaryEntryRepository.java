@@ -9,11 +9,11 @@ import java.util.Optional;
 
 public interface DiaryEntryRepository extends JpaRepository<DiaryEntry, Long> {
 
-    List<DiaryEntry> findByOwnerUsernameAndEntryDateBetweenOrderByEntryDateAsc(
+    List<DiaryEntry> findByOwner_UsernameAndEntryDateBetweenOrderByEntryDateAsc(
             String ownerUsername,
             LocalDate from,
             LocalDate to
     );
 
-    Optional<DiaryEntry> findByOwnerUsernameAndEntryDate(String ownerUsername, LocalDate entryDate);
+    Optional<DiaryEntry> findByOwner_UsernameAndEntryDate(String ownerUsername, LocalDate entryDate);
 }

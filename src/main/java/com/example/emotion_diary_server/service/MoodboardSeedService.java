@@ -3,7 +3,9 @@ package com.example.emotion_diary_server.service;
 import com.example.emotion_diary_server.dto.MoodboardContentDto;
 import com.example.emotion_diary_server.dto.MoodboardElementDto;
 import com.example.emotion_diary_server.model.Moodboard;
+import com.example.emotion_diary_server.persistence.EntityReferences;
 import com.example.emotion_diary_server.repository.MoodboardRepository;
+import com.example.emotion_diary_server.user.User;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -47,6 +49,7 @@ public class MoodboardSeedService {
     private final MoodboardRepository moodboardRepository;
     private final MoodboardContentService contentService;
     private final MoodboardNameService nameService;
+    private final EntityReferences entityReferences;
     private final ObjectMapper objectMapper;
     private final Random random = new Random();
 
@@ -54,19 +57,22 @@ public class MoodboardSeedService {
             MoodboardRepository moodboardRepository,
             MoodboardContentService contentService,
             MoodboardNameService nameService,
+            EntityReferences entityReferences,
             ObjectMapper objectMapper
     ) {
         this.moodboardRepository = moodboardRepository;
         this.contentService = contentService;
         this.nameService = nameService;
+        this.entityReferences = entityReferences;
         this.objectMapper = objectMapper;
     }
 
     public int seedMoodboards(String ownerUsername, int count) {
+        User owner = entityReferences.requireUser(ownerUsername);
         List<Moodboard> moodboards = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             MoodboardContentDto content = buildRandomContent();
-            Moodboard moodboard = new Moodboard(ownerUsername, contentService.serialize(content));
+            Moodboard moodboard = new Moodboard(owner, contentService.serialize(content));
             moodboard.setName(nameService.normalizeForCreate(randomName(i)));
             moodboard.setPublic(random.nextBoolean());
             moodboards.add(moodboard);
