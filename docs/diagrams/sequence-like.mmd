@@ -1,0 +1,13 @@
+sequenceDiagram
+    participant Cliente
+    participant MoodboardController
+    participant MoodboardLikeService
+    participant MoodboardAccessService
+    participant MoodboardLikeRepository
+
+    Cliente->>MoodboardController: POST /{user}/moodboards/{id}/likes
+    MoodboardController->>MoodboardAccessService: canAccess(id, user, principal)
+    MoodboardAccessService-->>MoodboardController: true
+    MoodboardController->>MoodboardLikeService: like(moodboard, principal)
+    MoodboardLikeService->>MoodboardLikeRepository: save(MoodboardLike)
+    MoodboardController-->>Cliente: 200 OK

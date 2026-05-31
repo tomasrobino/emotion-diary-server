@@ -1,0 +1,65 @@
+erDiagram
+    users {
+        bigint id PK
+        varchar username UK
+        varchar password
+    }
+
+    moodboard {
+        bigint id PK
+        varchar owner_username FK
+        longtext content
+        boolean is_public
+        varchar name
+        blob thumbnail
+    }
+
+    diary_entry {
+        bigint id PK
+        varchar owner_username FK
+        date entry_date
+        int mood_score
+        text text_note
+        bigint linked_moodboard_id FK
+        datetime reminder_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    moodboard_media {
+        bigint id PK
+        bigint moodboard_id FK
+        varchar content_type
+        varchar original_filename
+        blob data
+        bigint size_bytes
+        timestamp created_at
+    }
+
+    moodboard_likes {
+        bigint id PK
+        bigint moodboard_id FK
+        varchar liker_username FK
+    }
+
+    moodboard_permissions {
+        bigint id PK
+        bigint moodboard_id FK
+        varchar owner_username FK
+        varchar permitted_username FK
+    }
+
+    revoked_tokens {
+        varchar jti PK
+        timestamp expires_at
+    }
+
+    users ||--o{ moodboard : "posee (owner_username)"
+    users ||--|{ diary_entry : "posee (owner_username)"
+    users ||--o{ moodboard_likes : "da like (liker_username)"
+    users ||--o{ moodboard_permissions : "concede (owner_username)"
+    users ||--o{ moodboard_permissions : "recibe (permitted_username)"
+    moodboard ||--o{ moodboard_media : "contiene"
+    moodboard ||--o{ moodboard_likes : "recibe likes"
+    moodboard ||--o{ moodboard_permissions : "compartido mediante"
+    moodboard ||--o| diary_entry : "vinculado a (opcional)"
