@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 
+/**
+ * Runs at application startup to ensure a default admin user exists and optionally seed moodboards.
+ */
 @Component
 public class DataInitializer implements CommandLineRunner {
 
@@ -25,6 +28,11 @@ public class DataInitializer implements CommandLineRunner {
     @Value("${app.seed.moodboards.count:0}")
     private int seedMoodboardsCount;
 
+    /**
+     * @param userRepository        persists users
+     * @param passwordEncoder       hashes passwords for seeded users
+     * @param moodboardSeedService  creates sample moodboards when seeding is enabled
+     */
     public DataInitializer(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
@@ -35,6 +43,11 @@ public class DataInitializer implements CommandLineRunner {
         this.moodboardSeedService = moodboardSeedService;
     }
 
+    /**
+     * Creates the default admin user if missing, then optionally seeds moodboards per configuration.
+     *
+     * @param args command-line arguments (unused)
+     */
     @Override
     public void run(String... args) {
         if (userRepository.findByUsername("admin").isEmpty()) {

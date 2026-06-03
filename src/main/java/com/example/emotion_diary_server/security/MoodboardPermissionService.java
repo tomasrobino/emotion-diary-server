@@ -8,6 +8,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Manages explicit moodboard access grants: grant, revoke, and list permitted users.
+ */
 @Service
 public class MoodboardPermissionService {
 
@@ -25,6 +28,14 @@ public class MoodboardPermissionService {
         this.userService = userService;
     }
 
+    /**
+     * Grants another user access to a moodboard owned by {@code ownerUsername}.
+     *
+     * @param moodboard      moodboard to share
+     * @param ownerUsername  owner performing the grant
+     * @param grantTo        username to grant (case-insensitive)
+     * @throws IllegalArgumentException if the target user is invalid or is the owner
+     */
     public void grantAccess(Moodboard moodboard, String ownerUsername, String grantTo) {
         String grantToUsername = grantTo.trim().toLowerCase();
         if (grantToUsername.isEmpty()) {
@@ -45,6 +56,12 @@ public class MoodboardPermissionService {
         }
     }
 
+    /**
+     * Revokes a user's explicit access to a moodboard.
+     *
+     * @param moodboardId moodboard identifier
+     * @param revokeFrom  username to revoke (trimmed, lowercased)
+     */
     public void revokeAccess(Long moodboardId, String revokeFrom) {
         permissionRepository.deleteByMoodboard_IdAndPermitted_Username(
                 moodboardId,
@@ -52,6 +69,12 @@ public class MoodboardPermissionService {
         );
     }
 
+    /**
+     * Returns usernames that have been explicitly granted access to a moodboard.
+     *
+     * @param moodboardId moodboard identifier
+     * @return permitted usernames, in repository order
+     */
     public List<String> listPermittedUsernames(Long moodboardId) {
         return permissionRepository.findByMoodboard_Id(moodboardId)
                 .stream()

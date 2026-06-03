@@ -15,6 +15,9 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * Creates and validates JWT access tokens using the configured secret and expiration.
+ */
 @Service
 public class JwtService {
 
@@ -28,6 +31,12 @@ public class JwtService {
         );
     }
 
+    /**
+     * Issues a new signed JWT for the given username.
+     *
+     * @param username subject (username) embedded in the token
+     * @return compact JWT string
+     */
     public String generateToken(String username) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + jwtProperties.expirationMs());
@@ -40,18 +49,43 @@ public class JwtService {
                 .compact();
     }
 
+    /**
+     * Reads the subject (username) from a JWT.
+     *
+     * @param token compact JWT
+     * @return username, or {@code null} if the subject is absent
+     */
     public @Nullable String extractUsername(String token) {
         return parseClaims(token).getSubject();
     }
 
+    /**
+     * Reads the unique token identifier (JTI) from a JWT.
+     *
+     * @param token compact JWT
+     * @return JWT ID, or {@code null} if absent
+     */
     public @Nullable String extractJti(String token) {
         return parseClaims(token).getId();
     }
 
+    /**
+     * Reads the expiration instant from a JWT.
+     *
+     * @param token compact JWT
+     * @return expiration time
+     */
     public Instant extractExpiration(String token) {
         return parseClaims(token).getExpiration().toInstant();
     }
 
+    /**
+     * Checks whether the token matches the user, is not expired, and has a verifiable signature.
+     *
+     * @param token       compact JWT
+     * @param userDetails expected principal
+     * @return {@code true} if the token is valid for the user
+     */
     public boolean isTokenValid(String token, UserDetails userDetails) {
         String username = extractUsername(token);
         return username != null

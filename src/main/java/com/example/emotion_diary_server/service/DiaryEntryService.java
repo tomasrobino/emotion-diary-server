@@ -15,17 +15,33 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Diary entry queries and upserts for a single owner, including optional moodboard links.
+ */
 @Service
 public class DiaryEntryService {
 
     private final DiaryEntryRepository diaryEntryRepository;
     private final EntityReferences entityReferences;
 
+    /**
+     * @param diaryEntryRepository repository for diary entries
+     * @param entityReferences     resolves users and moodboards by reference
+     */
     public DiaryEntryService(DiaryEntryRepository diaryEntryRepository, EntityReferences entityReferences) {
         this.diaryEntryRepository = diaryEntryRepository;
         this.entityReferences = entityReferences;
     }
 
+    /**
+     * Returns entries for the owner between {@code from} and {@code to} (inclusive), ordered by date ascending.
+     *
+     * @param ownerUsername owner username
+     * @param from          start date (inclusive)
+     * @param to            end date (inclusive)
+     * @return matching diary entries
+     * @throws IllegalArgumentException if {@code from} is after {@code to}
+     */
     public List<DiaryEntry> findInRange(String ownerUsername, LocalDate from, LocalDate to) {
         if (from.isAfter(to)) {
             throw new IllegalArgumentException("'from' must not be after 'to'");
@@ -35,10 +51,26 @@ public class DiaryEntryService {
         );
     }
 
+    /**
+     * Loads the entry for a single calendar day, if present.
+     *
+     * @param ownerUsername owner username
+     * @param date          entry date
+     * @return the entry, or {@code null} if none exists for that date
+     */
     public @Nullable DiaryEntry findByDate(String ownerUsername, LocalDate date) {
         return diaryEntryRepository.findByOwner_UsernameAndEntryDate(ownerUsername, date).orElse(null);
     }
 
+    /**
+     * Creates or updates the diary entry for the request's entry date.
+     *
+     * @param ownerUsername authenticated owner username
+     * @param request       entry payload
+     * @return the persisted entry
+     * @throws IllegalArgumentException if mood score is out of range, entry date is missing,
+     *                                  or linked moodboard does not belong to the owner
+     */
     @Transactional
     public DiaryEntry upsert(String ownerUsername, DiaryEntryRequestDto request) {
         validateMoodScore(request.moodScore());
@@ -65,6 +97,13 @@ public class DiaryEntryService {
         return diaryEntryRepository.save(entry);
     }
 
+    /**
+     * Deletes the entry for the given date when it exists.
+     *
+     * @param ownerUsername owner username
+     * @param date          entry date
+     * @return {@code true} if an entry was deleted, {@code false} if none existed
+     */
     @Transactional
     public boolean deleteByDate(String ownerUsername, LocalDate date) {
         return diaryEntryRepository.findByOwner_UsernameAndEntryDate(ownerUsername, date)

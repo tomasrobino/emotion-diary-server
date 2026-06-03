@@ -33,11 +33,9 @@ import lombok.Getter;
 
 
 /**
-
  * Records that a user liked a moodboard.
-
+ * Each user may like a given moodboard at most once.
  */
-
 @Getter
 
 @Entity
@@ -54,6 +52,7 @@ public class MoodboardLike {
 
 
 
+    /** Surrogate primary key. */
     @Id
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -62,6 +61,7 @@ public class MoodboardLike {
 
 
 
+    /** Moodboard that was liked. */
     @JsonIgnore
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
@@ -80,6 +80,7 @@ public class MoodboardLike {
 
 
 
+    /** User who created the like. */
     @JsonIgnore
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
@@ -100,10 +101,15 @@ public class MoodboardLike {
 
 
 
+    /** JPA no-args constructor. */
     public MoodboardLike() {}
 
 
 
+    /**
+     * @param moodboard liked moodboard
+     * @param liker     user performing the like
+     */
     public MoodboardLike(Moodboard moodboard, User liker) {
 
         this.moodboard = moodboard;
@@ -114,6 +120,9 @@ public class MoodboardLike {
 
 
 
+    /**
+     * @return id of the liked moodboard
+     */
     public Long getMoodboardId() {
 
         return moodboard.getId();
@@ -122,6 +131,9 @@ public class MoodboardLike {
 
 
 
+    /**
+     * @return username of the user who liked the moodboard
+     */
     public String getLikerUsername() {
 
         return liker.getUsername();
@@ -129,5 +141,4 @@ public class MoodboardLike {
     }
 
 }
-
 

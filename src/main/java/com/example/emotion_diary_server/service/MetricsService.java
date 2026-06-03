@@ -8,15 +8,29 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Aggregates diary mood scores into period metrics and streak counts for an owner.
+ */
 @Service
 public class MetricsService {
 
     private final DiaryEntryRepository diaryEntryRepository;
 
+    /**
+     * @param diaryEntryRepository repository for diary entries
+     */
     public MetricsService(DiaryEntryRepository diaryEntryRepository) {
         this.diaryEntryRepository = diaryEntryRepository;
     }
 
+    /**
+     * Computes average mood, entry count, daily trend, and current streak for a rolling period.
+     *
+     * @param ownerUsername diary owner username
+     * @param period        window identifier: {@code 7d}, {@code 30d}, or {@code 90d}
+     * @return metrics summary for the period
+     * @throws IllegalArgumentException if {@code period} is not supported
+     */
     public MetricsResponseDto computeMetrics(String ownerUsername, String period) {
         int days = parsePeriod(period);
         LocalDate to = LocalDate.now();

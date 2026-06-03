@@ -17,7 +17,8 @@ import org.jspecify.annotations.Nullable;
 import lombok.Getter;
 
 /**
- * Represents an explicit permission grant for a moodboard.
+ * JPA entity linking a moodboard, its owner, and a user granted explicit access.
+ * Uniqueness is enforced per moodboard and permitted username.
  */
 @Getter
 @Entity
@@ -68,14 +69,23 @@ public class MoodboardPermission {
         this.permitted = permitted;
     }
 
+    /**
+     * @return moodboard identifier
+     */
     public Long getMoodboardId() {
         return moodboard.getId();
     }
 
+    /**
+     * @return username of the moodboard owner
+     */
     public String getOwnerUsername() {
         return owner.getUsername();
     }
 
+    /**
+     * @return username of the user granted access
+     */
     public String getPermittedUsername() {
         return permitted.getUsername();
     }

@@ -9,6 +9,9 @@ import lombok.Setter;
 
 import java.time.Instant;
 
+/**
+ * JPA entity storing a revoked JWT identifier (JTI) and its expiration for cleanup.
+ */
 @Entity
 @Table(name = "revoked_tokens")
 @Getter

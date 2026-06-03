@@ -13,6 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
+/**
+ * Cascading deletion of a user account and all owned or related data.
+ */
 @Service
 public class UserDeletionService {
 
@@ -24,6 +27,15 @@ public class UserDeletionService {
     private final MoodboardPermissionRepository moodboardPermissionRepository;
     private final TokenRevocationService tokenRevocationService;
 
+    /**
+     * @param userRepository                 repository for user entities
+     * @param passwordEncoder                encoder used to verify the deletion password
+     * @param diaryEntryRepository           repository for diary entries owned by the user
+     * @param moodboardService               service for loading and deleting moodboards
+     * @param moodboardLikeRepository        repository for likes given by the user
+     * @param moodboardPermissionRepository  repository for moodboard permissions granted to the user
+     * @param tokenRevocationService         service that revokes JWTs after deletion
+     */
     public UserDeletionService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
@@ -42,6 +54,16 @@ public class UserDeletionService {
         this.tokenRevocationService = tokenRevocationService;
     }
 
+    /**
+     * Permanently deletes the user after password confirmation, including diary entries,
+     * owned moodboards, likes, permissions, and optional token revocation.
+     *
+     * @param username username of the account to delete
+     * @param password plaintext password for confirmation
+     * @param token    optional JWT to revoke; may be {@code null}
+     * @throws org.springframework.security.authentication.BadCredentialsException if the password is wrong
+     * @throws IllegalArgumentException                                              if the user is not found
+     */
     @Transactional
     public void deleteAccount(String username, @Nullable String password, @Nullable String token) {
         User user = userRepository.findByUsername(username)

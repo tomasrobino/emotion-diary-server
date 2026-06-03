@@ -11,6 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
+/**
+ * Handles user registration, logout, password changes, and account deletion orchestration.
+ */
 @Service
 public class AuthService {
 
@@ -21,6 +24,14 @@ public class AuthService {
     private final TokenRevocationService tokenRevocationService;
     private final UserDeletionService userDeletionService;
 
+    /**
+     * @param userRepository           repository for user persistence
+     * @param passwordEncoder            encoder for password hashing and verification
+     * @param jwtService                 service that issues JWT access tokens
+     * @param jwtProperties              JWT configuration including token lifetime
+     * @param tokenRevocationService     service that revokes tokens on logout
+     * @param userDeletionService        service that performs cascading account deletion
+     */
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
@@ -37,6 +48,15 @@ public class AuthService {
         this.userDeletionService = userDeletionService;
     }
 
+    /**
+     * Registers a new user and returns a JWT for immediate authentication.
+     *
+     * @param username desired username (normalized to lowercase)
+     * @param password plaintext password (minimum six characters)
+     * @return access token and expiration metadata
+     * @throws UsernameAlreadyExistsException if the username is already taken
+     * @throws IllegalArgumentException       if username or password validation fails
+     */
     @Transactional
     public LoginResponse register(@Nullable String username, @Nullable String password) {
         String normalizedUsername = validateAndNormalizeUsername(username);
@@ -55,6 +75,11 @@ public class AuthService {
         return new LoginResponse(token, jwtProperties.expirationMs());
     }
 
+    /**
+     * Revokes the given JWT so it can no longer be used.
+     *
+     * @param token bearer token to invalidate
+     */
     public void logout(String token) {
         tokenRevocationService.revoke(token);
     }
@@ -79,6 +104,15 @@ public class AuthService {
         }
     }
 
+    /**
+     * Changes the authenticated user's password after verifying the current one.
+     *
+     * @param username        username of the account to update
+     * @param currentPassword current plaintext password
+     * @param newPassword     new plaintext password (minimum six characters)
+     * @throws org.springframework.security.authentication.BadCredentialsException if the current password is wrong
+     * @throws IllegalArgumentException                                              if the user is not found or the new password is invalid
+     */
     @Transactional
     public void changePassword(String username, @Nullable String currentPassword, @Nullable String newPassword) {
         User user = userRepository.findByUsername(username)
@@ -91,6 +125,15 @@ public class AuthService {
         userRepository.save(user);
     }
 
+    /**
+     * Deletes the authenticated user's account and associated data.
+     *
+     * @param username username of the account to delete
+     * @param password plaintext password for confirmation
+     * @param token    optional JWT to revoke after deletion
+     * @throws org.springframework.security.authentication.BadCredentialsException if the password is wrong
+     * @throws IllegalArgumentException                                              if the user is not found
+     */
     @Transactional
     public void deleteAccount(String username, @Nullable String password, @Nullable String token) {
         userDeletionService.deleteAccount(username, password, token);

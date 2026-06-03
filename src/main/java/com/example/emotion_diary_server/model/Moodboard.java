@@ -34,6 +34,9 @@ import lombok.Setter;
 
 
 
+/**
+ * User-owned collage of emotional content, optionally shared publicly.
+ */
 @Setter
 
 @Getter
@@ -44,6 +47,7 @@ import lombok.Setter;
 
 public class Moodboard {
 
+    /** Surrogate primary key. */
     @Id
 
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
@@ -52,6 +56,7 @@ public class Moodboard {
 
 
 
+    /** User who owns this moodboard. */
     @JsonIgnore
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -70,24 +75,28 @@ public class Moodboard {
 
 
 
+    /** Serialized moodboard payload (JSON). */
     @Column(columnDefinition = "LONGTEXT")
 
     private @Nullable String content;
 
 
 
+    /** When {@code true}, other users may view this moodboard without an explicit grant. */
     @Column(name = "is_public", nullable = false)
 
     private boolean isPublic = false;
 
 
 
+    /** Optional display name shown in listings. */
     @Column(length = 100)
 
     private @Nullable String name;
 
 
 
+    /** Optional preview image bytes. */
     @Lob
 
     @Column(columnDefinition = "LONGBLOB")
@@ -96,6 +105,10 @@ public class Moodboard {
 
 
 
+    /**
+     * @param owner   moodboard owner
+     * @param content initial serialized content
+     */
     public Moodboard(User owner, String content) {
 
         this.owner = owner;
@@ -106,6 +119,11 @@ public class Moodboard {
 
 
 
+    /**
+     * @param id      existing primary key (e.g. when rehydrating)
+     * @param owner   moodboard owner
+     * @param content serialized content
+     */
     public Moodboard(Long id, User owner, String content) {
 
         this.id = id;
@@ -118,6 +136,9 @@ public class Moodboard {
 
 
 
+    /**
+     * @return owner username, or {@code null} if {@link #owner} is not loaded
+     */
     public @Nullable String getOwnerUsername() {
 
         return owner != null ? owner.getUsername() : null;
@@ -135,5 +156,4 @@ public class Moodboard {
     }
 
 }
-
 

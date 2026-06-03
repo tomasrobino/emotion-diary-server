@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
+/**
+ * Serializes, deserializes, and validates moodboard canvas content against configured limits.
+ */
 @Service
 public class MoodboardContentService {
 
@@ -19,6 +22,11 @@ public class MoodboardContentService {
     private final MoodboardMediaRepository mediaRepository;
     private final MoodboardProperties properties;
 
+    /**
+     * @param objectMapper    JSON mapper for content DTOs
+     * @param mediaRepository used to verify image asset ownership on update
+     * @param properties      size and element limits
+     */
     public MoodboardContentService(
             ObjectMapper objectMapper,
             MoodboardMediaRepository mediaRepository,
@@ -29,6 +37,13 @@ public class MoodboardContentService {
         this.properties = properties;
     }
 
+    /**
+     * Converts content to JSON and enforces the maximum serialized size.
+     *
+     * @param content structured moodboard content
+     * @return JSON string suitable for persistence
+     * @throws IllegalArgumentException if serialization fails or JSON exceeds the configured byte limit
+     */
     public String serialize(MoodboardContentDto content) {
         try {
             String json = objectMapper.writeValueAsString(content);
@@ -43,6 +58,13 @@ public class MoodboardContentService {
         }
     }
 
+    /**
+     * Parses persisted JSON into a content DTO.
+     *
+     * @param contentJson stored JSON, must be non-blank
+     * @return parsed content
+     * @throws IllegalArgumentException if JSON is missing, blank, or invalid
+     */
     public MoodboardContentDto deserialize(@Nullable String contentJson) {
         if (contentJson == null || contentJson.isBlank()) {
             throw new IllegalArgumentException("Moodboard content is required");
@@ -54,6 +76,13 @@ public class MoodboardContentService {
         }
     }
 
+    /**
+     * Validates content for an existing moodboard, including media asset ownership for image elements.
+     *
+     * @param content     content to validate
+     * @param moodboardId id of the moodboard being updated
+     * @throws IllegalArgumentException if content is invalid or references unknown assets
+     */
     public void validate(@Nullable MoodboardContentDto content, Long moodboardId) {
         if (content == null) {
             throw new IllegalArgumentException("Moodboard content is required");
@@ -71,6 +100,12 @@ public class MoodboardContentService {
         }
     }
 
+    /**
+     * Validates content for moodboard creation (image elements must not reference {@code assetId} yet).
+     *
+     * @param content content to validate
+     * @throws IllegalArgumentException if content is invalid for create
+     */
     public void validateForCreate(@Nullable MoodboardContentDto content) {
         if (content == null) {
             throw new IllegalArgumentException("Moodboard content is required");

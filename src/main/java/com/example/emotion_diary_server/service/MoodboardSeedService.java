@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
+/**
+ * Generates sample moodboards with random canvas content for development and seeding.
+ */
 @Service
 public class MoodboardSeedService {
 
@@ -53,6 +56,13 @@ public class MoodboardSeedService {
     private final ObjectMapper objectMapper;
     private final Random random = new Random();
 
+    /**
+     * @param moodboardRepository repository for persisted moodboards
+     * @param contentService      serializes generated canvas JSON
+     * @param nameService         normalizes generated names
+     * @param entityReferences    resolves the owner user
+     * @param objectMapper        builds fabric JSON nodes
+     */
     public MoodboardSeedService(
             MoodboardRepository moodboardRepository,
             MoodboardContentService contentService,
@@ -67,6 +77,13 @@ public class MoodboardSeedService {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Creates and persists {@code count} random moodboards for the given owner.
+     *
+     * @param ownerUsername username of the moodboard owner
+     * @param count         number of moodboards to create
+     * @return the number of moodboards created (same as {@code count})
+     */
     public int seedMoodboards(String ownerUsername, int count) {
         User owner = entityReferences.requireUser(ownerUsername);
         List<Moodboard> moodboards = new ArrayList<>(count);

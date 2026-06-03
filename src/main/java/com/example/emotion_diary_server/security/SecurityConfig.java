@@ -17,11 +17,22 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
+/**
+ * Spring Security configuration for stateless JWT authentication, CORS, and HTTP authorization rules.
+ */
 @Configuration
 @EnableMethodSecurity
 @EnableConfigurationProperties(JwtProperties.class)
 public class SecurityConfig {
 
+    /**
+     * Builds the HTTP security filter chain with JWT authentication and route authorization rules.
+     *
+     * @param http                      HTTP security builder
+     * @param jwtAuthFilter             filter that validates Bearer tokens
+     * @param corsConfigurationSource   CORS configuration for cross-origin requests
+     * @return configured security filter chain
+     */
     @Bean
     public SecurityFilterChain filterChain(
             HttpSecurity http,
@@ -55,11 +66,22 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Exposes the Spring {@link AuthenticationManager} for programmatic authentication.
+     *
+     * @param config authentication configuration
+     * @return shared authentication manager
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) {
         return config.getAuthenticationManager();
     }
 
+    /**
+     * Password encoder used for hashing and verifying user credentials.
+     *
+     * @return BCrypt password encoder
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

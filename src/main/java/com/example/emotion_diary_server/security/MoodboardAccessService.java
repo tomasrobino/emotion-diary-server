@@ -5,11 +5,9 @@ import com.example.emotion_diary_server.repository.MoodboardRepository;
 import org.springframework.stereotype.Service;
 
 /**
- * Used to check moodboard access per moodboard.
- * Access is granted when any of these holds:
- *  1. The authenticated user is the owner
- *  2. The moodboard is marked public
- *  3. The authenticated user has been explicitly granted access to that moodboard
+ * Evaluates whether the current principal may access a moodboard.
+ * Access is granted when the user is the owner, the moodboard is public,
+ * or an explicit {@link MoodboardPermission} exists for that user.
  */
 @Service("moodboardAccess")
 public class MoodboardAccessService {

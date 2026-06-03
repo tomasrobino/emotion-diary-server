@@ -6,6 +6,7 @@ import com.example.emotion_diary_server.model.Moodboard;
 import com.example.emotion_diary_server.service.MoodboardContentService;
 import com.example.emotion_diary_server.service.MoodboardLikeService;
 import com.example.emotion_diary_server.service.MoodboardService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * REST endpoints for browsing public moodboards from other users.
+ */
+@Tag(name = "Public moodboards")
 @RestController
 public class PublicMoodboardController {
 
@@ -27,6 +32,11 @@ public class PublicMoodboardController {
     private final MoodboardLikeService likeService;
     private final MoodboardContentService contentService;
 
+    /**
+     * @param moodboardService moodboard queries
+     * @param likeService      like counts
+     * @param contentService   moodboard JSON content deserialization
+     */
     public PublicMoodboardController(
             MoodboardService moodboardService,
             MoodboardLikeService likeService,
@@ -38,8 +48,15 @@ public class PublicMoodboardController {
     }
 
     /**
-     * GET /public/moodboards?page=0&size=24
-     * Returns paginated public moodboards from other users.
+     * GET /public/moodboards — paginated feed of public moodboards owned by other users.
+     * <p>
+     * Requires authentication. Excludes the caller's own boards. Default {@code size} is 24 (max 50).
+     * Negative {@code page} is clamped to 0; invalid {@code size} falls back to default.
+     *
+     * @param page           zero-based page index
+     * @param size           page size (clamped to 1–50)
+     * @param authentication current user (used to exclude own moodboards)
+     * @return 200 OK with {@link PublicMoodboardsPageDto}
      */
     @GetMapping("/public/moodboards")
     public ResponseEntity<PublicMoodboardsPageDto> getPublicMoodboards(

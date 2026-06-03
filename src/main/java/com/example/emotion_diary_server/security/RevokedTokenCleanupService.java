@@ -6,6 +6,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
+/**
+ * Scheduled job that purges expired revoked-token rows from the database.
+ */
 @Service
 public class RevokedTokenCleanupService {
 
@@ -15,6 +18,9 @@ public class RevokedTokenCleanupService {
         this.revokedTokenRepository = revokedTokenRepository;
     }
 
+    /**
+     * Deletes revoked-token records whose JWT expiration is in the past.
+     */
     @Scheduled(cron = "0 0 * * * *")
     @Transactional
     public void purgeExpiredTokens() {

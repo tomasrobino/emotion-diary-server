@@ -11,16 +11,27 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
 
+/**
+ * Applies CORS rules from {@link CorsProperties} to MVC and the security filter chain.
+ */
 @Configuration
 @EnableConfigurationProperties(CorsProperties.class)
 public class WebConfig implements WebMvcConfigurer {
 
     private final CorsProperties corsProperties;
 
+    /**
+     * @param corsProperties bound CORS settings
+     */
     public WebConfig(CorsProperties corsProperties) {
         this.corsProperties = corsProperties;
     }
 
+    /**
+     * Registers global CORS mappings when at least one origin or pattern is configured.
+     *
+     * @param registry Spring MVC CORS registry
+     */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         CorsConfiguration configuration = buildCorsConfiguration();
@@ -41,6 +52,11 @@ public class WebConfig implements WebMvcConfigurer {
         }
     }
 
+    /**
+     * Exposes the same CORS configuration for Spring Security.
+     *
+     * @return CORS configuration source for all paths
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

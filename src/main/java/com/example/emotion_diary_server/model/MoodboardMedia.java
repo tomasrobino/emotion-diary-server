@@ -38,6 +38,9 @@ import java.time.Instant;
 
 
 
+/**
+ * Binary media attachment stored for a {@link Moodboard}.
+ */
 @Getter
 
 @Setter
@@ -48,6 +51,7 @@ import java.time.Instant;
 
 public class MoodboardMedia {
 
+    /** Surrogate primary key. */
     @Id
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -56,6 +60,7 @@ public class MoodboardMedia {
 
 
 
+    /** Parent moodboard this file belongs to. */
     @JsonIgnore
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
@@ -74,16 +79,19 @@ public class MoodboardMedia {
 
 
 
+    /** MIME type of {@link #data}. */
     @Column(nullable = false)
 
     private String contentType;
 
 
 
+    /** Original upload filename, if known. */
     private @Nullable String originalFilename;
 
 
 
+    /** Raw file bytes. */
     @Lob
 
     @Column(nullable = false, columnDefinition = "LONGBLOB")
@@ -92,18 +100,26 @@ public class MoodboardMedia {
 
 
 
+    /** Size of {@link #data} in bytes. */
     @Column(nullable = false)
 
     private long sizeBytes;
 
 
 
+    /** When this attachment was stored. */
     @Column(nullable = false)
 
     private Instant createdAt = Instant.now();
 
 
 
+    /**
+     * @param moodboard          parent moodboard
+     * @param contentType        MIME type
+     * @param originalFilename   optional source filename
+     * @param data               file content; {@link #sizeBytes} is set from its length
+     */
     public MoodboardMedia(Moodboard moodboard, String contentType, @Nullable String originalFilename, byte[] data) {
 
         this.moodboard = moodboard;
@@ -120,6 +136,9 @@ public class MoodboardMedia {
 
 
 
+    /**
+     * @return id of the parent moodboard
+     */
     public Long getMoodboardId() {
 
         return moodboard.getId();
@@ -127,5 +146,4 @@ public class MoodboardMedia {
     }
 
 }
-
 
